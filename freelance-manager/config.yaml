@@ -1,0 +1,62 @@
+# Configuration Freelance Manager
+# Personnalisez ces informations avec vos données
+
+freelance:
+  nom: "Prénom NOM"
+  siret: "000 000 000 00000"
+  adresse: "123 Rue de l'Exemple"
+  code_postal: "67000"
+  ville: "Strasbourg"
+  pays: "France"
+  email: "votre@email.com"
+  telephone: "+33 6 00 00 00 00"
+  site_web: ""
+  statut: "Micro-entrepreneur"
+  # false = Franchise en base de TVA (article 293 B du CGI)
+  tva_applicable: false
+  numero_tva: ""
+
+  # Coordonnées bancaires
+  banque: "Nom de la banque"
+  iban: "FR76 0000 0000 0000 0000 0000 000"
+  bic: "XXXXXXXX"
+
+# Paramètres par défaut
+defaults:
+  tjm: 300
+  validite_devis_jours: 30
+  delai_paiement_jours: 30
+  penalites_retard_taux: 10.0  # % annuel
+  escompte_paiement_anticipe: 0.0
+
+# Mentions légales obligatoires
+mentions_legales:
+  # Mention TVA (pour micro-entreprise)
+  tva_non_applicable: "TVA non applicable, art. 293 B du CGI"
+
+  # Pénalités de retard (obligatoire sur factures)
+  penalites_retard: "En cas de retard de paiement, une pénalité égale à 3 fois le taux d'intérêt légal sera exigible (décret 2012-1115). Une indemnité forfaitaire de 40€ pour frais de recouvrement sera également due (art. L.441-10 du Code de commerce)."
+
+  # Escompte (obligatoire sur factures)
+  escompte: "Pas d'escompte pour paiement anticipé."
+
+  # Conditions de paiement
+  conditions_paiement: "Paiement par virement bancaire à 30 jours fin de mois"
+
+  # Assurance RC Pro (optionnel mais recommandé)
+  assurance_rcp: "Non soumis à obligation d'assurance professionnelle"
+
+  # Garantie financière (pour certaines professions)
+  garantie_financiere: "Non applicable"
+
+# Seuils micro-entreprise 2024
+seuils:
+  # Seuil CA prestations de services
+  ca_services: 77700
+  # Alerte à X% du seuil
+  alerte_pourcentage: 80
+
+# Chemins des fichiers générés
+paths:
+  output: "output"
+  database: "freelance.db"

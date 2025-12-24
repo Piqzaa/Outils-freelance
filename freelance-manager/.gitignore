@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Base de données (ne pas commiter vos données personnelles)
+*.db
+
+# Fichiers générés (devis, factures, contrats)
+output/*.pdf
+output/*.docx
+output/*.xlsx
+output/*.csv
+
+# Config personnalisée (créer à partir de config.yaml.example)
+# config.yaml  # Décommentez si vous ne voulez pas versionner votre config
+
+# OS
+.DS_Store
+Thumbs.db
