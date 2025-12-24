@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Devis - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-file-earmark-text me-2"></i>Devis</h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('devis_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Nouveau devis
+        </a>
+    </div>
+</div>
+
+{% if devis %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Numéro</th>
+                    <th>Client</th>
+                    <th>Description</th>
+                    <th class="text-end">Montant HT</th>
+                    <th>Statut</th>
+                    <th>Date</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in devis %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('devis_view', devis_id=d.id) }}" class="fw-bold text-decoration-none">
+                            {{ d.numero }}
+                        </a>
+                    </td>
+                    <td>{{ d.client_nom }}</td>
+                    <td>{{ d.description[:30] }}{% if d.description|length > 30 %}...{% endif %}</td>
+                    <td class="text-end fw-bold">{{ "{:,.0f}".format(d.total_ht).replace(",", " ") }} €</td>
+                    <td>
+                        {% if d.statut == 'accepté' %}
+                        <span class="badge bg-success">{{ d.statut }}</span>
+                        {% elif d.statut == 'refusé' %}
+                        <span class="badge bg-danger">{{ d.statut }}</span>
+                        {% elif d.statut == 'envoyé' %}
+                        <span class="badge bg-info">{{ d.statut }}</span>
+                        {% elif d.statut == 'expiré' %}
+                        <span class="badge bg-warning">{{ d.statut }}</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ d.statut }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ d.date_creation.strftime('%d/%m/%Y') if d.date_creation else '-' }}</td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('devis_view', devis_id=d.id) }}" class="btn btn-outline-primary" title="Voir">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('devis_pdf', devis_id=d.id) }}" class="btn btn-outline-secondary" title="PDF">
+                                <i class="bi bi-file-pdf"></i>
+                            </a>
+                            {% if d.statut != 'accepté' %}
+                            <a href="{{ url_for('devis_to_facture', devis_id=d.id) }}" class="btn btn-outline-success" title="Facturer">
+                                <i class="bi bi-receipt"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
+        <h4 class="mt-3">Aucun devis</h4>
+        <p class="text-muted">Créez votre premier devis pour commencer.</p>
+        <a href="{{ url_for('devis_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Créer un devis
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

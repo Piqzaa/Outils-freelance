@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Nouveau contrat - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('contrats_list') }}">Contrats</a></li>
+                <li class="breadcrumb-item active">Nouveau</li>
+            </ol>
+        </nav>
+        <h1><i class="bi bi-file-earmark-richtext me-2"></i>Nouveau contrat</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('contrat_new') }}">
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="client_id" class="form-label">Client *</label>
+                            <select class="form-select" id="client_id" name="client_id" required>
+                                <option value="">Sélectionner un client...</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}" {% if request.args.get('client_id')|int == client.id %}selected{% endif %}>
+                                    {{ client.nom }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="type_contrat" class="form-label">Type de contrat *</label>
+                            <select class="form-select" id="type_contrat" name="type_contrat" required>
+                                <option value="regie">Régie (temps passé)</option>
+                                <option value="forfait">Forfait (prix fixe)</option>
+                                <option value="mission">Mission courte (1-5 jours)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3"><i class="bi bi-briefcase me-2"></i>Mission</h5>
+
+                    <div class="mb-3">
+                        <label for="objet" class="form-label">Objet du contrat</label>
+                        <input type="text" class="form-control" id="objet" name="objet"
+                               placeholder="Ex: Mission de développement web">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description détaillée</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Décrivez la mission en détail..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="lieu" class="form-label">Lieu d'exécution</label>
+                        <input type="text" class="form-control" id="lieu" name="lieu"
+                               placeholder="Ex: Télétravail / Locaux du client à Paris">
+                    </div>
+
+                    <h5 class="mb-3"><i class="bi bi-currency-euro me-2"></i>Tarification</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="tjm" class="form-label">TJM (€) *</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="tjm" name="tjm"
+                                       value="{{ defaults.get('tjm', 300) }}" min="0" step="10" required>
+                                <span class="input-group-text">€ / jour</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4" id="duree-jours-group">
+                            <label for="duree_jours" class="form-label">Durée (jours)</label>
+                            <input type="number" class="form-control" id="duree_jours" name="duree_jours" min="1">
+                        </div>
+                        <div class="col-md-4" id="duree-mois-group">
+                            <label for="duree_mois" class="form-label">Durée (mois)</label>
+                            <input type="number" class="form-control" id="duree_mois" name="duree_mois" value="3" min="1">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4" id="forfait-group" style="display: none;">
+                        <div class="col-md-6">
+                            <label for="montant_forfait" class="form-label">Montant forfaitaire (€)</label>
+                            <input type="number" class="form-control" id="montant_forfait" name="montant_forfait" min="0">
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3"><i class="bi bi-calendar me-2"></i>Dates</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="date_debut" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="date_debut" name="date_debut">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date_fin" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="date_fin" name="date_fin">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('contrats_list') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-file-earmark-richtext me-1"></i>Générer le contrat
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle me-2"></i>Types de contrats</h6>
+                <p class="small text-muted mb-2"><strong>Régie:</strong> Facturation au temps passé, idéal pour les missions longues avec périmètre évolutif.</p>
+                <p class="small text-muted mb-2"><strong>Forfait:</strong> Prix fixe avec engagement sur résultat, idéal pour des projets bien définis.</p>
+                <p class="small text-muted mb-0"><strong>Mission:</strong> Contrat simplifié pour interventions courtes (1-5 jours).</p>
+            </div>
+        </div>
+
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6><i class="bi bi-check-circle me-2"></i>Le contrat inclura</h6>
+                <ul class="small text-muted mb-0">
+                    <li>Identification des parties</li>
+                    <li>Objet et description</li>
+                    <li>Durée et lieu</li>
+                    <li>Tarification et paiement</li>
+                    <li>Clause de confidentialité</li>
+                    <li>Propriété intellectuelle</li>
+                    <li>Conditions de résiliation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const typeSelect = document.getElementById('type_contrat');
+const dureeJoursGroup = document.getElementById('duree-jours-group');
+const dureeMoisGroup = document.getElementById('duree-mois-group');
+const forfaitGroup = document.getElementById('forfait-group');
+
+function updateFormByType() {
+    const type = typeSelect.value;
+
+    if (type === 'regie') {
+        dureeJoursGroup.style.display = 'none';
+        dureeMoisGroup.style.display = 'block';
+        forfaitGroup.style.display = 'none';
+    } else if (type === 'forfait') {
+        dureeJoursGroup.style.display = 'block';
+        dureeMoisGroup.style.display = 'none';
+        forfaitGroup.style.display = 'flex';
+    } else {
+        dureeJoursGroup.style.display = 'block';
+        dureeMoisGroup.style.display = 'none';
+        forfaitGroup.style.display = 'none';
+    }
+}
+
+typeSelect.addEventListener('change', updateFormByType);
+updateFormByType();
+</script>
+{% endblock %}

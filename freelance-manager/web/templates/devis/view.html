@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}{{ devis.numero }} - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('devis_list') }}">Devis</a></li>
+                <li class="breadcrumb-item active">{{ devis.numero }}</li>
+            </ol>
+        </nav>
+        <h1><i class="bi bi-file-earmark-text me-2"></i>{{ devis.numero }}</h1>
+    </div>
+    <div class="col-auto">
+        <div class="btn-group">
+            <a href="{{ url_for('devis_pdf', devis_id=devis.id) }}" class="btn btn-primary">
+                <i class="bi bi-file-pdf me-1"></i>Télécharger PDF
+            </a>
+            {% if devis.statut not in ['accepté', 'refusé'] %}
+            <a href="{{ url_for('devis_to_facture', devis_id=devis.id) }}" class="btn btn-success">
+                <i class="bi bi-receipt me-1"></i>Convertir en facture
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Détails du devis -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Détails</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Client</h6>
+                        <p class="mb-0">
+                            <a href="{{ url_for('client_view', client_id=client.id) }}">
+                                <strong>{{ client.nom }}</strong>
+                            </a>
+                            {% if client.siret %}<br><small class="text-muted">SIRET: {{ client.siret }}</small>{% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Date</h6>
+                        <p class="mb-0">
+                            {{ devis.date_creation.strftime('%d/%m/%Y') if devis.date_creation else '-' }}
+                            <br><small class="text-muted">Validité: {{ devis.validite_jours }} jours</small>
+                        </p>
+                    </div>
+                </div>
+
+                <h6 class="text-muted">Description</h6>
+                <p>{{ devis.description }}</p>
+
+                <hr>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Prestation</th>
+                                <th class="text-end">TJM</th>
+                                <th class="text-end">Jours</th>
+                                <th class="text-end">Total HT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ devis.description }}</td>
+                                <td class="text-end">{{ "{:,.2f}".format(devis.tjm).replace(",", " ") }} €</td>
+                                <td class="text-end">{{ devis.jours }}</td>
+                                <td class="text-end fw-bold">{{ "{:,.2f}".format(devis.total_ht).replace(",", " ") }} €</td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="3" class="text-end">Total HT</th>
+                                <th class="text-end">{{ "{:,.2f}".format(devis.total_ht).replace(",", " ") }} €</th>
+                            </tr>
+                            <tr>
+                                <th colspan="3" class="text-end">Total TTC</th>
+                                <th class="text-end">{{ "{:,.2f}".format(devis.total_ttc).replace(",", " ") }} €</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statut et actions -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-flag me-2"></i>Statut</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    {% if devis.statut == 'accepté' %}
+                    <span class="badge bg-success fs-5">{{ devis.statut }}</span>
+                    {% elif devis.statut == 'refusé' %}
+                    <span class="badge bg-danger fs-5">{{ devis.statut }}</span>
+                    {% elif devis.statut == 'envoyé' %}
+                    <span class="badge bg-info fs-5">{{ devis.statut }}</span>
+                    {% elif devis.statut == 'expiré' %}
+                    <span class="badge bg-warning fs-5">{{ devis.statut }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary fs-5">{{ devis.statut }}</span>
+                    {% endif %}
+                </div>
+
+                <form method="POST" action="{{ url_for('devis_update_statut', devis_id=devis.id) }}">
+                    <label class="form-label">Changer le statut</label>
+                    <div class="input-group">
+                        <select class="form-select" name="statut">
+                            <option value="brouillon" {% if devis.statut == 'brouillon' %}selected{% endif %}>Brouillon</option>
+                            <option value="envoyé" {% if devis.statut == 'envoyé' %}selected{% endif %}>Envoyé</option>
+                            <option value="accepté" {% if devis.statut == 'accepté' %}selected{% endif %}>Accepté</option>
+                            <option value="refusé" {% if devis.statut == 'refusé' %}selected{% endif %}>Refusé</option>
+                            <option value="expiré" {% if devis.statut == 'expiré' %}selected{% endif %}>Expiré</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-download me-2"></i>Documents</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid">
+                    <a href="{{ url_for('devis_pdf', devis_id=devis.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-file-pdf me-2"></i>Télécharger le PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

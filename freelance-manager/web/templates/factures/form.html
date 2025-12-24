@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvelle facture - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('factures_list') }}">Factures</a></li>
+                <li class="breadcrumb-item active">Nouvelle</li>
+            </ol>
+        </nav>
+        <h1><i class="bi bi-receipt me-2"></i>Nouvelle facture</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    <strong>Conseil:</strong> Pour facturer un devis existant, allez sur la page du devis et cliquez sur "Convertir en facture".
+                </div>
+
+                <form method="POST" action="{{ url_for('facture_new') }}">
+
+                    <div class="mb-4">
+                        <label for="client_id" class="form-label">Client *</label>
+                        <select class="form-select" id="client_id" name="client_id" required>
+                            <option value="">Sélectionner un client...</option>
+                            {% for client in clients %}
+                            <option value="{{ client.id }}">{{ client.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <h5 class="mb-3"><i class="bi bi-briefcase me-2"></i>Prestation</h5>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="tjm" class="form-label">TJM (€) *</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="tjm" name="tjm"
+                                       value="{{ defaults.get('tjm', 300) }}" min="0" step="10" required>
+                                <span class="input-group-text">€ / jour</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="jours_effectifs" class="form-label">Jours travaillés *</label>
+                            <input type="number" class="form-control" id="jours_effectifs" name="jours_effectifs"
+                                   value="5" min="0.5" step="0.5" required>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3"><i class="bi bi-calendar me-2"></i>Période de mission</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="date_debut" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="date_debut" name="date_debut">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date_fin" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="date_fin" name="date_fin">
+                        </div>
+                    </div>
+
+                    <!-- Calcul en temps réel -->
+                    <div class="alert alert-success">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong>Total à facturer :</strong>
+                            </div>
+                            <div class="col-auto">
+                                <span class="fs-4 fw-bold" id="total-display">0 €</span> HT
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('factures_list') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-receipt me-1"></i>Créer la facture
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle me-2"></i>Informations</h6>
+                <ul class="small text-muted mb-0">
+                    <li>Le PDF sera généré automatiquement</li>
+                    <li>Numérotation FACT-2024-XXX</li>
+                    <li>Mentions légales incluses</li>
+                    <li>Échéance: 30 jours fin de mois</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function updateTotal() {
+    const tjm = parseFloat(document.getElementById('tjm').value) || 0;
+    const jours = parseFloat(document.getElementById('jours_effectifs').value) || 0;
+    const total = tjm * jours;
+    document.getElementById('total-display').textContent = total.toLocaleString('fr-FR') + ' €';
+}
+
+document.getElementById('tjm').addEventListener('input', updateTotal);
+document.getElementById('jours_effectifs').addEventListener('input', updateTotal);
+updateTotal();
+</script>
+{% endblock %}

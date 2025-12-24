@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contrat.numero }} - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('contrats_list') }}">Contrats</a></li>
+                <li class="breadcrumb-item active">{{ contrat.numero }}</li>
+            </ol>
+        </nav>
+        <h1><i class="bi bi-file-earmark-richtext me-2"></i>{{ contrat.numero }}</h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('contrat_download', contrat_id=contrat.id) }}" class="btn btn-primary">
+            <i class="bi bi-download me-1"></i>Télécharger Word
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Détails du contrat</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Client</h6>
+                        <p class="mb-0">
+                            <a href="{{ url_for('client_view', client_id=client.id) }}">
+                                <strong>{{ client.nom }}</strong>
+                            </a>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Type</h6>
+                        <p class="mb-0">
+                            {% if contrat.type_contrat == 'regie' %}
+                            <span class="badge bg-primary fs-6">Contrat en Régie</span>
+                            {% elif contrat.type_contrat == 'forfait' %}
+                            <span class="badge bg-info fs-6">Contrat au Forfait</span>
+                            {% else %}
+                            <span class="badge bg-secondary fs-6">Mission courte</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">TJM</h6>
+                        <p class="fs-4 mb-0">{{ "{:,.0f}".format(contrat.tjm).replace(",", " ") }} €</p>
+                    </div>
+                    {% if contrat.duree_jours %}
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Durée</h6>
+                        <p class="fs-4 mb-0">{{ contrat.duree_jours }} jours</p>
+                    </div>
+                    {% endif %}
+                    {% if contrat.montant_forfait %}
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Montant forfaitaire</h6>
+                        <p class="fs-4 mb-0">{{ "{:,.0f}".format(contrat.montant_forfait).replace(",", " ") }} €</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if contrat.date_debut or contrat.date_fin %}
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Date de début</h6>
+                        <p class="mb-0">{{ contrat.date_debut.strftime('%d/%m/%Y') if contrat.date_debut else '-' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Date de fin</h6>
+                        <p class="mb-0">{{ contrat.date_fin.strftime('%d/%m/%Y') if contrat.date_fin else '-' }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-flag me-2"></i>Statut</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if contrat.statut == 'signé' %}
+                <span class="badge bg-success fs-4">{{ contrat.statut }}</span>
+                {% elif contrat.statut == 'terminé' %}
+                <span class="badge bg-secondary fs-4">{{ contrat.statut }}</span>
+                {% else %}
+                <span class="badge bg-warning fs-4">{{ contrat.statut }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-download me-2"></i>Document</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('contrat_download', contrat_id=contrat.id) }}" class="btn btn-primary">
+                        <i class="bi bi-file-earmark-word me-2"></i>Télécharger Word
+                    </a>
+                </div>
+                <p class="small text-muted mt-3 mb-0">
+                    Le document Word peut être modifié selon vos besoins avant signature.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
+        <p class="text-muted">Vue d'ensemble de votre activité {{ stats.annee }}</p>
+    </div>
+    <div class="col-auto">
+        <div class="btn-group">
+            <a href="{{ url_for('devis_new') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Nouveau Devis
+            </a>
+            <a href="{{ url_for('facture_new') }}" class="btn btn-success">
+                <i class="bi bi-plus-lg me-1"></i>Nouvelle Facture
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Cartes statistiques -->
+<div class="row g-4 mb-4">
+    <!-- CA Annuel -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100 border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted mb-1">CA Annuel {{ stats.annee }}</h6>
+                        <h2 class="mb-0">{{ "{:,.0f}".format(stats.ca_annuel).replace(",", " ") }} €</h2>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-cash-stack text-primary fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-primary" style="width: {{ pct_seuil|min(100) }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ "{:.1f}".format(pct_seuil) }}% du seuil micro ({{ "{:,.0f}".format(seuil_ca).replace(",", " ") }} €)</small>
+                </div>
+                {% if pct_seuil >= 80 %}
+                <div class="alert alert-warning mt-2 mb-0 py-1 px-2">
+                    <small><i class="bi bi-exclamation-triangle me-1"></i>Attention au seuil!</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Clients actifs -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted mb-1">Clients actifs</h6>
+                        <h2 class="mb-0">{{ stats.clients_actifs }}</h2>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-people text-info fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('clients_list') }}" class="text-decoration-none">
+                        Voir tous les clients <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Devis en attente -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted mb-1">Devis en attente</h6>
+                        <h2 class="mb-0">{{ stats.devis_en_attente }}</h2>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-file-earmark-text text-warning fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('devis_list') }}" class="text-decoration-none">
+                        Voir les devis <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Factures impayées -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100 {% if stats.factures_impayees_count > 0 %}border-danger{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted mb-1">Factures impayées</h6>
+                        <h2 class="mb-0">{{ "{:,.0f}".format(stats.factures_impayees_montant).replace(",", " ") }} €</h2>
+                    </div>
+                    <div class="bg-danger bg-opacity-10 p-3 rounded">
+                        <i class="bi bi-exclamation-circle text-danger fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="badge bg-danger">{{ stats.factures_impayees_count }} facture(s)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Graphique CA mensuel -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>CA Mensuel {{ stats.annee }}</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="caChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Actions rapides</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('client_new') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-person-plus me-2"></i>Ajouter un client
+                    </a>
+                    <a href="{{ url_for('devis_new') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-plus me-2"></i>Créer un devis
+                    </a>
+                    <a href="{{ url_for('facture_new') }}" class="btn btn-outline-success">
+                        <i class="bi bi-receipt me-2"></i>Créer une facture
+                    </a>
+                    <a href="{{ url_for('contrat_new') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-file-earmark-richtext me-2"></i>Générer un contrat
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <!-- Factures en attente de paiement -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Factures en attente</h5>
+                <a href="{{ url_for('factures_list') }}?statut=envoyée" class="btn btn-sm btn-outline-primary">
+                    Voir tout
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if factures_impayees %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Client</th>
+                                <th class="text-end">Montant</th>
+                                <th>Échéance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in factures_impayees %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('facture_view', facture_id=f.id) }}">
+                                        {{ f.numero }}
+                                    </a>
+                                </td>
+                                <td>{{ f.client_nom }}</td>
+                                <td class="text-end">{{ "{:,.0f}".format(f.total_ht).replace(",", " ") }} €</td>
+                                <td>
+                                    {% if f.en_retard %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        {{ f.jours_retard }}j de retard
+                                    </span>
+                                    {% else %}
+                                    {{ f.date_echeance.strftime('%d/%m/%Y') if f.date_echeance else '-' }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-check-circle fs-1"></i>
+                    <p class="mt-2">Aucune facture en attente</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Derniers devis -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Derniers devis</h5>
+                <a href="{{ url_for('devis_list') }}" class="btn btn-sm btn-outline-primary">
+                    Voir tout
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if derniers_devis %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Client</th>
+                                <th class="text-end">Montant</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in derniers_devis %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('devis_view', devis_id=d.id) }}">
+                                        {{ d.numero }}
+                                    </a>
+                                </td>
+                                <td>{{ d.client_nom }}</td>
+                                <td class="text-end">{{ "{:,.0f}".format(d.total_ht).replace(",", " ") }} €</td>
+                                <td>
+                                    {% if d.statut == 'accepté' %}
+                                    <span class="badge bg-success">{{ d.statut }}</span>
+                                    {% elif d.statut == 'refusé' %}
+                                    <span class="badge bg-danger">{{ d.statut }}</span>
+                                    {% elif d.statut == 'envoyé' %}
+                                    <span class="badge bg-info">{{ d.statut }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ d.statut }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-file-earmark fs-1"></i>
+                    <p class="mt-2">Aucun devis</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Graphique CA mensuel
+const ctx = document.getElementById('caChart').getContext('2d');
+const moisLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+const caData = {{ stats.ca_mensuel | tojson }};
+
+// Convertir les données
+const dataValues = moisLabels.map((_, i) => caData[i + 1] || 0);
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: moisLabels,
+        datasets: [{
+            label: 'CA HT (€)',
+            data: dataValues,
+            backgroundColor: 'rgba(13, 110, 253, 0.7)',
+            borderColor: 'rgba(13, 110, 253, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('fr-FR') + ' €';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
