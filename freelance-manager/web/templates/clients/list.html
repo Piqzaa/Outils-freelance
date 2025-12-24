@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Clients - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-people me-2"></i>Clients</h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('client_new') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i>Nouveau client
+        </a>
+    </div>
+</div>
+
+{% if clients %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>SIRET</th>
+                    <th>Ville</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                <tr>
+                    <td>{{ client.id }}</td>
+                    <td>
+                        <a href="{{ url_for('client_view', client_id=client.id) }}" class="fw-bold text-decoration-none">
+                            {{ client.nom }}
+                        </a>
+                    </td>
+                    <td><code>{{ client.siret or '-' }}</code></td>
+                    <td>{{ client.ville or '-' }}</td>
+                    <td>
+                        {% if client.email %}
+                        <a href="mailto:{{ client.email }}">{{ client.email }}</a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>{{ client.contact_nom or '-' }}</td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('client_view', client_id=client.id) }}" class="btn btn-outline-primary" title="Voir">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('client_edit', client_id=client.id) }}" class="btn btn-outline-secondary" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{{ url_for('devis_new') }}?client_id={{ client.id }}" class="btn btn-outline-success" title="Créer devis">
+                                <i class="bi bi-file-earmark-plus"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-people fs-1 text-muted"></i>
+        <h4 class="mt-3">Aucun client</h4>
+        <p class="text-muted">Commencez par ajouter votre premier client.</p>
+        <a href="{{ url_for('client_new') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i>Ajouter un client
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

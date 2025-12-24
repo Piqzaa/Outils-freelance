@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Configuration - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-gear me-2"></i>Configuration</h1>
+        <p class="text-muted">Paramètres de votre activité freelance</p>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('config_view') }}">
+    <div class="row g-4">
+        <!-- Infos personnelles -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Vos informations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="nom" class="form-label">Nom complet</label>
+                        <input type="text" class="form-control" id="nom" name="nom"
+                               value="{{ config.freelance.nom }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="statut" class="form-label">Statut juridique</label>
+                        <select class="form-select" id="statut" name="statut">
+                            <option value="Micro-entrepreneur" {% if config.freelance.statut == 'Micro-entrepreneur' %}selected{% endif %}>Micro-entrepreneur</option>
+                            <option value="Entreprise individuelle" {% if config.freelance.statut == 'Entreprise individuelle' %}selected{% endif %}>Entreprise individuelle</option>
+                            <option value="EURL" {% if config.freelance.statut == 'EURL' %}selected{% endif %}>EURL</option>
+                            <option value="SASU" {% if config.freelance.statut == 'SASU' %}selected{% endif %}>SASU</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="siret" class="form-label">SIRET</label>
+                        <input type="text" class="form-control" id="siret" name="siret"
+                               value="{{ config.freelance.siret }}"
+                               placeholder="XXX XXX XXX XXXXX">
+                    </div>
+                    <div class="mb-3">
+                        <label for="adresse" class="form-label">Adresse</label>
+                        <input type="text" class="form-control" id="adresse" name="adresse"
+                               value="{{ config.freelance.adresse }}">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <label for="code_postal" class="form-label">Code postal</label>
+                            <input type="text" class="form-control" id="code_postal" name="code_postal"
+                                   value="{{ config.freelance.code_postal }}">
+                        </div>
+                        <div class="col-8">
+                            <label for="ville" class="form-label">Ville</label>
+                            <input type="text" class="form-control" id="ville" name="ville"
+                                   value="{{ config.freelance.ville }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Contact</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                               value="{{ config.freelance.email }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="telephone" class="form-label">Téléphone</label>
+                        <input type="tel" class="form-control" id="telephone" name="telephone"
+                               value="{{ config.freelance.telephone }}">
+                    </div>
+
+                    <hr>
+
+                    <h6><i class="bi bi-bank me-2"></i>Coordonnées bancaires</h6>
+                    <div class="mb-3">
+                        <label for="banque" class="form-label">Banque</label>
+                        <input type="text" class="form-control" id="banque" name="banque"
+                               value="{{ config.freelance.banque }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="iban" class="form-label">IBAN</label>
+                        <input type="text" class="form-control" id="iban" name="iban"
+                               value="{{ config.freelance.iban }}"
+                               placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX">
+                    </div>
+                    <div class="mb-3">
+                        <label for="bic" class="form-label">BIC</label>
+                        <input type="text" class="form-control" id="bic" name="bic"
+                               value="{{ config.freelance.bic }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paramètres par défaut -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-sliders me-2"></i>Paramètres par défaut</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="tjm_default" class="form-label">TJM par défaut (€)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="tjm_default" name="tjm_default"
+                                   value="{{ config.defaults.tjm }}" min="0" step="10">
+                            <span class="input-group-text">€ / jour</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="validite_devis" class="form-label">Validité des devis (jours)</label>
+                        <input type="number" class="form-control" id="validite_devis" name="validite_devis"
+                               value="{{ config.defaults.validite_devis_jours }}" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="delai_paiement" class="form-label">Délai de paiement (jours)</label>
+                        <input type="number" class="form-control" id="delai_paiement" name="delai_paiement"
+                               value="{{ config.defaults.delai_paiement_jours }}" min="1">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="tva_applicable" name="tva_applicable"
+                               {% if config.freelance.tva_applicable %}checked{% endif %}>
+                        <label class="form-check-label" for="tva_applicable">
+                            TVA applicable (décochez pour micro-entreprise)
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seuils -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Seuils micro-entreprise</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="seuil_ca" class="form-label">Seuil CA prestations de services (€)</label>
+                        <input type="number" class="form-control" id="seuil_ca" name="seuil_ca"
+                               value="{{ config.seuils.ca_services }}" min="0">
+                        <div class="form-text">Seuil 2024 : 77 700 €</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alerte_pct" class="form-label">Alerte à X% du seuil</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="alerte_pct" name="alerte_pct"
+                                   value="{{ config.seuils.alerte_pourcentage }}" min="0" max="100">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mentions légales -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>Mentions légales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="conditions_paiement" class="form-label">Conditions de paiement</label>
+                        <input type="text" class="form-control" id="conditions_paiement" name="conditions_paiement"
+                               value="{{ config.mentions_legales.conditions_paiement }}"
+                               placeholder="Paiement par virement bancaire à 30 jours fin de mois">
+                    </div>
+                    <div class="mb-3">
+                        <label for="penalites_retard" class="form-label">Pénalités de retard</label>
+                        <textarea class="form-control" id="penalites_retard" name="penalites_retard" rows="2">{{ config.mentions_legales.penalites_retard }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="escompte" class="form-label">Escompte</label>
+                        <input type="text" class="form-control" id="escompte" name="escompte"
+                               value="{{ config.mentions_legales.escompte }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col">
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Enregistrer la configuration
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

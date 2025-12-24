@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}{{ client.nom }} - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('clients_list') }}">Clients</a></li>
+                <li class="breadcrumb-item active">{{ client.nom }}</li>
+            </ol>
+        </nav>
+        <h1><i class="bi bi-building me-2"></i>{{ client.nom }}</h1>
+    </div>
+    <div class="col-auto">
+        <div class="btn-group">
+            <a href="{{ url_for('client_edit', client_id=client.id) }}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil me-1"></i>Modifier
+            </a>
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <i class="bi bi-trash me-1"></i>Supprimer
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Infos client -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">SIRET</dt>
+                    <dd class="col-sm-8"><code>{{ client.siret or '-' }}</code></dd>
+
+                    <dt class="col-sm-4">Adresse</dt>
+                    <dd class="col-sm-8">
+                        {{ client.adresse or '-' }}<br>
+                        {{ client.code_postal }} {{ client.ville }}
+                    </dd>
+
+                    <dt class="col-sm-4">Contact</dt>
+                    <dd class="col-sm-8">{{ client.contact_nom or '-' }}</dd>
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">
+                        {% if client.email %}
+                        <a href="mailto:{{ client.email }}">{{ client.email }}</a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4">Téléphone</dt>
+                    <dd class="col-sm-8">{{ client.telephone or '-' }}</dd>
+                </dl>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('devis_new') }}?client_id={{ client.id }}" class="btn btn-primary">
+                        <i class="bi bi-file-earmark-plus me-1"></i>Créer un devis
+                    </a>
+                    <a href="{{ url_for('contrat_new') }}?client_id={{ client.id }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-file-earmark-richtext me-1"></i>Générer un contrat
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historique -->
+    <div class="col-lg-8">
+        <!-- Devis -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Devis ({{ devis|length }})</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if devis %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Description</th>
+                                <th class="text-end">Montant</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in devis %}
+                            <tr>
+                                <td><a href="{{ url_for('devis_view', devis_id=d.id) }}">{{ d.numero }}</a></td>
+                                <td>{{ d.description[:40] }}{% if d.description|length > 40 %}...{% endif %}</td>
+                                <td class="text-end">{{ "{:,.0f}".format(d.total_ht).replace(",", " ") }} €</td>
+                                <td>
+                                    {% if d.statut == 'accepté' %}
+                                    <span class="badge bg-success">{{ d.statut }}</span>
+                                    {% elif d.statut == 'refusé' %}
+                                    <span class="badge bg-danger">{{ d.statut }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ d.statut }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ d.date_creation.strftime('%d/%m/%Y') if d.date_creation else '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3 mb-0">Aucun devis</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Factures -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Factures ({{ factures|length }})</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if factures %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Description</th>
+                                <th class="text-end">Montant</th>
+                                <th>Statut</th>
+                                <th>Échéance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in factures %}
+                            <tr>
+                                <td><a href="{{ url_for('facture_view', facture_id=f.id) }}">{{ f.numero }}</a></td>
+                                <td>{{ f.description[:40] }}{% if f.description|length > 40 %}...{% endif %}</td>
+                                <td class="text-end">{{ "{:,.0f}".format(f.total_ht).replace(",", " ") }} €</td>
+                                <td>
+                                    {% if f.statut == 'payée' %}
+                                    <span class="badge bg-success">{{ f.statut }}</span>
+                                    {% elif f.statut == 'impayée' %}
+                                    <span class="badge bg-danger">{{ f.statut }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ f.statut }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ f.date_echeance.strftime('%d/%m/%Y') if f.date_echeance else '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3 mb-0">Aucune facture</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Contrats -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-richtext me-2"></i>Contrats ({{ contrats|length }})</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if contrats %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Type</th>
+                                <th class="text-end">TJM</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in contrats %}
+                            <tr>
+                                <td><a href="{{ url_for('contrat_view', contrat_id=c.id) }}">{{ c.numero }}</a></td>
+                                <td>
+                                    <span class="badge bg-info">{{ c.type_contrat }}</span>
+                                </td>
+                                <td class="text-end">{{ "{:,.0f}".format(c.tjm).replace(",", " ") }} €</td>
+                                <td>{{ c.date_creation.strftime('%d/%m/%Y') if c.date_creation else '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3 mb-0">Aucun contrat</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le client <strong>{{ client.nom }}</strong> ?</p>
+                <p class="text-danger mb-0">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Cette action est irréversible.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form method="POST" action="{{ url_for('client_delete', client_id=client.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

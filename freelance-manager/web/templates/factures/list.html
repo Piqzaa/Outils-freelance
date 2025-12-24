@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Factures - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-receipt me-2"></i>Factures</h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('facture_new') }}" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i>Nouvelle facture
+        </a>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body py-2">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <label class="form-label mb-0">Statut:</label>
+            </div>
+            <div class="col-auto">
+                <select class="form-select form-select-sm" name="statut" onchange="this.form.submit()">
+                    <option value="">Tous</option>
+                    <option value="brouillon" {% if filtre_statut == 'brouillon' %}selected{% endif %}>Brouillon</option>
+                    <option value="envoyée" {% if filtre_statut == 'envoyée' %}selected{% endif %}>Envoyée</option>
+                    <option value="payée" {% if filtre_statut == 'payée' %}selected{% endif %}>Payée</option>
+                    <option value="impayée" {% if filtre_statut == 'impayée' %}selected{% endif %}>Impayée</option>
+                </select>
+            </div>
+            {% if filtre_statut or filtre_annee %}
+            <div class="col-auto">
+                <a href="{{ url_for('factures_list') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Réinitialiser
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% if factures %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Numéro</th>
+                    <th>Client</th>
+                    <th>Description</th>
+                    <th class="text-end">Montant HT</th>
+                    <th>Statut</th>
+                    <th>Échéance</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in factures %}
+                <tr class="{% if f.en_retard %}table-danger{% endif %}">
+                    <td>
+                        <a href="{{ url_for('facture_view', facture_id=f.id) }}" class="fw-bold text-decoration-none">
+                            {{ f.numero }}
+                        </a>
+                    </td>
+                    <td>{{ f.client_nom }}</td>
+                    <td>{{ f.description[:30] }}{% if f.description|length > 30 %}...{% endif %}</td>
+                    <td class="text-end fw-bold">{{ "{:,.0f}".format(f.total_ht).replace(",", " ") }} €</td>
+                    <td>
+                        {% if f.statut == 'payée' %}
+                        <span class="badge bg-success">{{ f.statut }}</span>
+                        {% elif f.statut == 'impayée' or f.en_retard %}
+                        <span class="badge bg-danger">{{ f.statut }}</span>
+                        {% elif f.statut == 'envoyée' %}
+                        <span class="badge bg-info">{{ f.statut }}</span>
+                        {% elif f.statut == 'annulée' %}
+                        <span class="badge bg-secondary">{{ f.statut }}</span>
+                        {% else %}
+                        <span class="badge bg-warning">{{ f.statut }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if f.en_retard %}
+                        <span class="text-danger">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            {{ f.date_echeance.strftime('%d/%m/%Y') if f.date_echeance else '-' }}
+                        </span>
+                        {% else %}
+                        {{ f.date_echeance.strftime('%d/%m/%Y') if f.date_echeance else '-' }}
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('facture_view', facture_id=f.id) }}" class="btn btn-outline-primary" title="Voir">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('facture_pdf', facture_id=f.id) }}" class="btn btn-outline-secondary" title="PDF">
+                                <i class="bi bi-file-pdf"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-receipt fs-1 text-muted"></i>
+        <h4 class="mt-3">Aucune facture</h4>
+        <p class="text-muted">Créez votre première facture.</p>
+        <a href="{{ url_for('facture_new') }}" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i>Créer une facture
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

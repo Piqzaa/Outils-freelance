@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Contrats - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-file-earmark-richtext me-2"></i>Contrats</h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('contrat_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Nouveau contrat
+        </a>
+    </div>
+</div>
+
+{% if contrats %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Numéro</th>
+                    <th>Client</th>
+                    <th>Type</th>
+                    <th class="text-end">TJM</th>
+                    <th>Dates</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in contrats %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('contrat_view', contrat_id=c.id) }}" class="fw-bold text-decoration-none">
+                            {{ c.numero }}
+                        </a>
+                    </td>
+                    <td>{{ c.client_nom }}</td>
+                    <td>
+                        {% if c.type_contrat == 'regie' %}
+                        <span class="badge bg-primary">Régie</span>
+                        {% elif c.type_contrat == 'forfait' %}
+                        <span class="badge bg-info">Forfait</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Mission</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">{{ "{:,.0f}".format(c.tjm).replace(",", " ") }} €</td>
+                    <td>
+                        {% if c.date_debut and c.date_fin %}
+                        {{ c.date_debut.strftime('%d/%m/%Y') }} → {{ c.date_fin.strftime('%d/%m/%Y') }}
+                        {% elif c.date_debut %}
+                        Début: {{ c.date_debut.strftime('%d/%m/%Y') }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if c.statut == 'signé' %}
+                        <span class="badge bg-success">{{ c.statut }}</span>
+                        {% elif c.statut == 'terminé' %}
+                        <span class="badge bg-secondary">{{ c.statut }}</span>
+                        {% else %}
+                        <span class="badge bg-warning">{{ c.statut }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('contrat_view', contrat_id=c.id) }}" class="btn btn-outline-primary" title="Voir">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('contrat_download', contrat_id=c.id) }}" class="btn btn-outline-secondary" title="Télécharger">
+                                <i class="bi bi-download"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-file-earmark-richtext fs-1 text-muted"></i>
+        <h4 class="mt-3">Aucun contrat</h4>
+        <p class="text-muted">Générez votre premier contrat.</p>
+        <a href="{{ url_for('contrat_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Créer un contrat
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

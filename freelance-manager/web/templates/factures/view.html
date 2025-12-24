@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}{{ facture.numero }} - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('factures_list') }}">Factures</a></li>
+                <li class="breadcrumb-item active">{{ facture.numero }}</li>
+            </ol>
+        </nav>
+        <h1><i class="bi bi-receipt me-2"></i>{{ facture.numero }}</h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('facture_pdf', facture_id=facture.id) }}" class="btn btn-primary">
+            <i class="bi bi-file-pdf me-1"></i>Télécharger PDF
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Détails -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Détails</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Client</h6>
+                        <p class="mb-0">
+                            <a href="{{ url_for('client_view', client_id=client.id) }}">
+                                <strong>{{ client.nom }}</strong>
+                            </a>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Dates</h6>
+                        <p class="mb-0">
+                            Émission: {{ facture.date_creation.strftime('%d/%m/%Y') if facture.date_creation else '-' }}<br>
+                            Échéance: {{ facture.date_echeance.strftime('%d/%m/%Y') if facture.date_echeance else '-' }}
+                        </p>
+                    </div>
+                </div>
+
+                {% if devis %}
+                <div class="alert alert-secondary mb-4">
+                    <i class="bi bi-link-45deg me-2"></i>
+                    Liée au devis: <a href="{{ url_for('devis_view', devis_id=devis.id) }}">{{ devis.numero }}</a>
+                </div>
+                {% endif %}
+
+                {% if facture.date_debut_mission or facture.date_fin_mission %}
+                <div class="mb-4">
+                    <h6 class="text-muted">Période de mission</h6>
+                    <p class="mb-0">
+                        {% if facture.date_debut_mission and facture.date_fin_mission %}
+                        Du {{ facture.date_debut_mission.strftime('%d/%m/%Y') }} au {{ facture.date_fin_mission.strftime('%d/%m/%Y') }}
+                        {% elif facture.date_debut_mission %}
+                        À partir du {{ facture.date_debut_mission.strftime('%d/%m/%Y') }}
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+
+                <h6 class="text-muted">Description</h6>
+                <p>{{ facture.description }}</p>
+
+                <hr>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Prestation</th>
+                                <th class="text-end">TJM</th>
+                                <th class="text-end">Jours</th>
+                                <th class="text-end">Total HT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ facture.description }}</td>
+                                <td class="text-end">{{ "{:,.2f}".format(facture.tjm).replace(",", " ") }} €</td>
+                                <td class="text-end">{{ facture.jours_effectifs }}</td>
+                                <td class="text-end fw-bold">{{ "{:,.2f}".format(facture.total_ht).replace(",", " ") }} €</td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="3" class="text-end">Total HT</th>
+                                <th class="text-end">{{ "{:,.2f}".format(facture.total_ht).replace(",", " ") }} €</th>
+                            </tr>
+                            <tr class="table-primary">
+                                <th colspan="3" class="text-end">Total TTC</th>
+                                <th class="text-end fs-5">{{ "{:,.2f}".format(facture.total_ttc).replace(",", " ") }} €</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statut et paiement -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-flag me-2"></i>Statut</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    {% if facture.statut == 'payée' %}
+                    <span class="badge bg-success fs-5">{{ facture.statut }}</span>
+                    {% if facture.date_paiement %}
+                    <small class="text-muted d-block mt-1">Payée le {{ facture.date_paiement.strftime('%d/%m/%Y') }}</small>
+                    {% endif %}
+                    {% elif facture.statut == 'impayée' %}
+                    <span class="badge bg-danger fs-5">{{ facture.statut }}</span>
+                    {% elif facture.statut == 'envoyée' %}
+                    <span class="badge bg-info fs-5">{{ facture.statut }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary fs-5">{{ facture.statut }}</span>
+                    {% endif %}
+                </div>
+
+                <form method="POST" action="{{ url_for('facture_update_statut', facture_id=facture.id) }}">
+                    <label class="form-label">Changer le statut</label>
+                    <select class="form-select mb-2" name="statut" id="statut-select">
+                        <option value="brouillon" {% if facture.statut == 'brouillon' %}selected{% endif %}>Brouillon</option>
+                        <option value="envoyée" {% if facture.statut == 'envoyée' %}selected{% endif %}>Envoyée</option>
+                        <option value="payée" {% if facture.statut == 'payée' %}selected{% endif %}>Payée</option>
+                        <option value="impayée" {% if facture.statut == 'impayée' %}selected{% endif %}>Impayée</option>
+                        <option value="annulée" {% if facture.statut == 'annulée' %}selected{% endif %}>Annulée</option>
+                    </select>
+
+                    <div id="date-paiement-group" class="mb-2" style="display: none;">
+                        <label class="form-label">Date de paiement</label>
+                        <input type="date" class="form-control" name="date_paiement" id="date-paiement">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-lg me-1"></i>Mettre à jour
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-download me-2"></i>Documents</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid">
+                    <a href="{{ url_for('facture_pdf', facture_id=facture.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-file-pdf me-2"></i>Télécharger le PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const statutSelect = document.getElementById('statut-select');
+const dateGroup = document.getElementById('date-paiement-group');
+const dateInput = document.getElementById('date-paiement');
+
+function toggleDatePaiement() {
+    if (statutSelect.value === 'payée') {
+        dateGroup.style.display = 'block';
+        dateInput.value = new Date().toISOString().split('T')[0];
+    } else {
+        dateGroup.style.display = 'none';
+    }
+}
+
+statutSelect.addEventListener('change', toggleDatePaiement);
+toggleDatePaiement();
+</script>
+{% endblock %}

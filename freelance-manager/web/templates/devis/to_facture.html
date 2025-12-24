@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Facturer {{ devis.numero }} - Freelance Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('devis_list') }}">Devis</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('devis_view', devis_id=devis.id) }}">{{ devis.numero }}</a></li>
+                <li class="breadcrumb-item active">Facturer</li>
+            </ol>
+        </nav>
+        <h1><i class="bi bi-receipt me-2"></i>Créer une facture</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <h6 class="mb-2"><i class="bi bi-file-earmark-text me-2"></i>Devis {{ devis.numero }}</h6>
+                    <p class="mb-1"><strong>Client:</strong> {{ client.nom }}</p>
+                    <p class="mb-1"><strong>Description:</strong> {{ devis.description }}</p>
+                    <p class="mb-0"><strong>Montant devis:</strong> {{ devis.jours }} jours × {{ "{:,.0f}".format(devis.tjm) }} € = <strong>{{ "{:,.0f}".format(devis.total_ht) }} € HT</strong></p>
+                </div>
+
+                <form method="POST" action="{{ url_for('devis_to_facture', devis_id=devis.id) }}">
+
+                    <h5 class="mb-3"><i class="bi bi-calendar me-2"></i>Période de mission</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="date_debut" class="form-label">Date de début</label>
+                            <input type="date" class="form-control" id="date_debut" name="date_debut">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date_fin" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="date_fin" name="date_fin">
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3"><i class="bi bi-calculator me-2"></i>Jours facturés</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="jours_effectifs" class="form-label">Jours effectivement travaillés *</label>
+                            <input type="number" class="form-control" id="jours_effectifs" name="jours_effectifs"
+                                   value="{{ devis.jours }}" min="0.5" step="0.5" required>
+                            <div class="form-text">Jours prévus au devis: {{ devis.jours }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">TJM</label>
+                            <div class="form-control-plaintext fs-5">{{ "{:,.0f}".format(devis.tjm) }} €</div>
+                        </div>
+                    </div>
+
+                    <!-- Calcul en temps réel -->
+                    <div class="alert alert-success">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong>Total à facturer :</strong>
+                            </div>
+                            <div class="col-auto">
+                                <span class="fs-4 fw-bold" id="total-display">{{ "{:,.0f}".format(devis.total_ht) }} €</span> HT
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('devis_view', devis_id=devis.id) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-receipt me-1"></i>Créer la facture
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle me-2"></i>Informations</h6>
+                <ul class="small text-muted mb-0">
+                    <li>La facture sera liée au devis</li>
+                    <li>Le devis sera marqué comme "accepté"</li>
+                    <li>Le PDF sera généré automatiquement</li>
+                    <li>Numérotation FACT-2024-XXX</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const tjm = {{ devis.tjm }};
+
+function updateTotal() {
+    const jours = parseFloat(document.getElementById('jours_effectifs').value) || 0;
+    const total = tjm * jours;
+    document.getElementById('total-display').textContent = total.toLocaleString('fr-FR') + ' €';
+}
+
+document.getElementById('jours_effectifs').addEventListener('input', updateTotal);
+</script>
+{% endblock %}

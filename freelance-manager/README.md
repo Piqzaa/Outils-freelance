@@ -1,18 +1,44 @@
-# Freelance Manager CLI
+# Freelance Manager
 
-Outil CLI complet pour la gestion des devis, factures et contrats pour freelances en France.
+Outil complet pour la gestion des devis, factures et contrats pour freelances en France.
+Disponible en **CLI** (ligne de commande) et **Interface Web**.
 
 ## Installation
 
 ```bash
 cd freelance-manager
-pip install -e .
+pip install -r requirements.txt
 ```
 
-Ou sans installation :
+## Interface Web (recommandée)
+
+Lancez l'interface web :
+
 ```bash
-pip install -r requirements.txt
+python web/app.py
+```
+
+Puis ouvrez http://localhost:5000 dans votre navigateur.
+
+**Fonctionnalités web :**
+- Dashboard avec CA annuel et graphiques
+- Gestion complète des clients
+- Création de devis avec génération PDF automatique
+- Création de factures (depuis un devis ou directement)
+- Génération de contrats Word (régie, forfait, mission)
+- Configuration via interface
+- Alertes seuil micro-entreprise
+
+## CLI (ligne de commande)
+
+```bash
 python cli.py --help
+```
+
+Ou avec installation :
+```bash
+pip install -e .
+freelance --help
 ```
 
 ## Configuration
