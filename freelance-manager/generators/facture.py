@@ -225,12 +225,13 @@ class FactureGenerator:
 
         elements.append(Paragraph("FACTURÉ À", self.styles['SectionTitle']))
 
+        contact_line = f"À l'attention de : {client.contact_nom}" if client.contact_nom else ""
         client_info = f"""
         <b>{client.nom}</b><br/>
         {f'SIRET : {client.siret}' if client.siret else ''}<br/>
         {client.adresse or ''}<br/>
         {client.code_postal or ''} {client.ville or ''}<br/>
-        {f'À l\'attention de : {client.contact_nom}' if client.contact_nom else ''}<br/>
+        {contact_line}<br/>
         {client.email or ''}
         """
 

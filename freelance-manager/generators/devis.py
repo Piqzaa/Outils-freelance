@@ -357,9 +357,10 @@ class DevisGenerator:
 
         elements.append(Paragraph("MENTIONS LÉGALES", self.styles['SectionTitle']))
 
+        assurance_default = "Non soumis à obligation d'assurance professionnelle"
         mentions_text = f"""
         Dispensé d'immatriculation au registre du commerce et des sociétés (RCS) et au répertoire des métiers (RM).<br/>
-        {self.mentions.get('assurance_rcp', 'Non soumis à obligation d\'assurance professionnelle')}<br/>
+        {self.mentions.get('assurance_rcp', assurance_default)}<br/>
         {self.mentions.get('garantie_financiere', '')}
         """
 
