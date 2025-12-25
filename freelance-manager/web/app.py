@@ -214,10 +214,18 @@ def devis_new():
 
     if request.method == 'POST':
         client_id = int(request.form['client_id'])
-        tjm = float(request.form['tjm'])
-        jours = float(request.form['jours'])
         description = request.form.get('description', 'Prestation de service')
         validite = int(request.form.get('validite', 30))
+        type_tarif = request.form.get('type_tarif', 'tjm')
+
+        if type_tarif == 'forfait':
+            montant_forfait = float(request.form.get('montant_forfait', 0))
+            tjm = 0
+            jours = 0
+        else:
+            tjm = float(request.form.get('tjm', 0))
+            jours = float(request.form.get('jours', 0))
+            montant_forfait = 0
 
         # Créer le devis
         devis = db.add_devis(
@@ -225,7 +233,9 @@ def devis_new():
             description=description,
             tjm=tjm,
             jours=jours,
-            validite_jours=validite
+            validite_jours=validite,
+            type_tarif=type_tarif,
+            montant_forfait=montant_forfait
         )
 
         # Générer le PDF
@@ -320,23 +330,38 @@ def devis_to_facture(devis_id):
     client = db.get_client(devis.client_id)
 
     if request.method == 'POST':
-        jours_effectifs = float(request.form['jours_effectifs'])
         date_debut_str = request.form.get('date_debut', '')
         date_fin_str = request.form.get('date_fin', '')
 
         date_debut = datetime.strptime(date_debut_str, '%Y-%m-%d').date() if date_debut_str else None
         date_fin = datetime.strptime(date_fin_str, '%Y-%m-%d').date() if date_fin_str else None
 
-        # Créer la facture
-        facture = db.add_facture(
-            client_id=devis.client_id,
-            description=devis.description,
-            tjm=devis.tjm,
-            jours_effectifs=jours_effectifs,
-            devis_id=devis_id,
-            date_debut_mission=date_debut,
-            date_fin_mission=date_fin
-        )
+        # Créer la facture selon le type de tarif
+        if devis.type_tarif == 'forfait':
+            montant_forfait = float(request.form.get('montant_forfait', devis.total_ht))
+            facture = db.add_facture(
+                client_id=devis.client_id,
+                description=devis.description,
+                tjm=0,
+                jours_effectifs=0,
+                devis_id=devis_id,
+                date_debut_mission=date_debut,
+                date_fin_mission=date_fin,
+                type_tarif='forfait',
+                montant_forfait=montant_forfait
+            )
+        else:
+            jours_effectifs = float(request.form.get('jours_effectifs', 0))
+            facture = db.add_facture(
+                client_id=devis.client_id,
+                description=devis.description,
+                tjm=devis.tjm,
+                jours_effectifs=jours_effectifs,
+                devis_id=devis_id,
+                date_debut_mission=date_debut,
+                date_fin_mission=date_fin,
+                type_tarif='tjm'
+            )
 
         # Mettre à jour le statut du devis
         db.update_devis_statut(devis_id, 'accepté')
@@ -388,14 +413,22 @@ def facture_new():
 
     if request.method == 'POST':
         client_id = int(request.form['client_id'])
-        tjm = float(request.form['tjm'])
-        jours = float(request.form['jours_effectifs'])
         description = request.form.get('description', 'Prestation de service')
+        type_tarif = request.form.get('type_tarif', 'tjm')
 
         date_debut_str = request.form.get('date_debut', '')
         date_fin_str = request.form.get('date_fin', '')
         date_debut = datetime.strptime(date_debut_str, '%Y-%m-%d').date() if date_debut_str else None
         date_fin = datetime.strptime(date_fin_str, '%Y-%m-%d').date() if date_fin_str else None
+
+        if type_tarif == 'forfait':
+            montant_forfait = float(request.form.get('montant_forfait', 0))
+            tjm = 0
+            jours = 0
+        else:
+            tjm = float(request.form.get('tjm', 0))
+            jours = float(request.form.get('jours_effectifs', 0))
+            montant_forfait = 0
 
         # Créer la facture
         facture = db.add_facture(
@@ -404,7 +437,9 @@ def facture_new():
             tjm=tjm,
             jours_effectifs=jours,
             date_debut_mission=date_debut,
-            date_fin_mission=date_fin
+            date_fin_mission=date_fin,
+            type_tarif=type_tarif,
+            montant_forfait=montant_forfait
         )
 
         # Générer le PDF

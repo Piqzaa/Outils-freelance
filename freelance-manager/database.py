@@ -55,6 +55,7 @@ class Devis:
     date_creation: Optional[date] = None
     date_envoi: Optional[date] = None
     notes: str = ""
+    type_tarif: str = "tjm"  # 'tjm' (TJM × jours) ou 'forfait' (prix fixe)
 
     @classmethod
     def from_row(cls, row: tuple) -> 'Devis':
@@ -71,7 +72,8 @@ class Devis:
             validite_jours=row[9],
             date_creation=date.fromisoformat(row[10]) if row[10] else None,
             date_envoi=date.fromisoformat(row[11]) if row[11] else None,
-            notes=row[12] if len(row) > 12 else ""
+            notes=row[12] if len(row) > 12 else "",
+            type_tarif=row[13] if len(row) > 13 and row[13] else "tjm"
         )
 
 
@@ -94,6 +96,7 @@ class Facture:
     date_debut_mission: Optional[date] = None
     date_fin_mission: Optional[date] = None
     notes: str = ""
+    type_tarif: str = "tjm"  # 'tjm' (TJM × jours) ou 'forfait' (prix fixe)
 
     @classmethod
     def from_row(cls, row: tuple) -> 'Facture':
@@ -114,7 +117,8 @@ class Facture:
             date_paiement=date.fromisoformat(row[13]) if row[13] else None,
             date_debut_mission=date.fromisoformat(row[14]) if row[14] else None,
             date_fin_mission=date.fromisoformat(row[15]) if row[15] else None,
-            notes=row[16] if len(row) > 16 else ""
+            notes=row[16] if len(row) > 16 else "",
+            type_tarif=row[17] if len(row) > 17 and row[17] else "tjm"
         )
 
 
@@ -201,9 +205,16 @@ class Database:
                 date_creation DATE DEFAULT CURRENT_DATE,
                 date_envoi DATE,
                 notes TEXT,
+                type_tarif TEXT DEFAULT 'tjm',
                 FOREIGN KEY (client_id) REFERENCES clients(id)
             )
         ''')
+
+        # Migration: ajouter colonne type_tarif si elle n'existe pas
+        try:
+            cursor.execute("ALTER TABLE devis ADD COLUMN type_tarif TEXT DEFAULT 'tjm'")
+        except sqlite3.OperationalError:
+            pass  # La colonne existe déjà
 
         # Table factures
         cursor.execute('''
@@ -225,10 +236,17 @@ class Database:
                 date_debut_mission DATE,
                 date_fin_mission DATE,
                 notes TEXT,
+                type_tarif TEXT DEFAULT 'tjm',
                 FOREIGN KEY (devis_id) REFERENCES devis(id),
                 FOREIGN KEY (client_id) REFERENCES clients(id)
             )
         ''')
+
+        # Migration: ajouter colonne type_tarif si elle n'existe pas
+        try:
+            cursor.execute("ALTER TABLE factures ADD COLUMN type_tarif TEXT DEFAULT 'tjm'")
+        except sqlite3.OperationalError:
+            pass  # La colonne existe déjà
 
         # Table contrats
         cursor.execute('''
@@ -371,20 +389,35 @@ class Database:
 
     # ==================== GESTION DES DEVIS ====================
 
-    def add_devis(self, client_id: int, description: str, tjm: float,
-                  jours: float, validite_jours: int = 30, notes: str = "") -> Devis:
-        """Crée un nouveau devis."""
+    def add_devis(self, client_id: int, description: str, tjm: float = 0,
+                  jours: float = 0, validite_jours: int = 30, notes: str = "",
+                  type_tarif: str = "tjm", montant_forfait: float = 0) -> Devis:
+        """
+        Crée un nouveau devis.
+
+        Args:
+            type_tarif: 'tjm' pour TJM × jours, 'forfait' pour prix fixe
+            montant_forfait: Montant forfaitaire si type_tarif == 'forfait'
+        """
         numero = self.get_next_number('devis')
-        total_ht = tjm * jours
+
+        if type_tarif == 'forfait':
+            total_ht = montant_forfait
+            # Pour forfait, tjm et jours sont à 0
+            tjm = 0
+            jours = 0
+        else:
+            total_ht = tjm * jours
+
         total_ttc = total_ht  # Micro-entreprise sans TVA
 
         cursor = self.conn.cursor()
         cursor.execute('''
             INSERT INTO devis (numero, client_id, description, tjm, jours,
-                              total_ht, total_ttc, validite_jours, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                              total_ht, total_ttc, validite_jours, notes, type_tarif)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (numero, client_id, description, tjm, jours, total_ht, total_ttc,
-              validite_jours, notes))
+              validite_jours, notes, type_tarif))
         self.conn.commit()
 
         return self.get_devis(cursor.lastrowid)
@@ -437,14 +470,29 @@ class Database:
 
     # ==================== GESTION DES FACTURES ====================
 
-    def add_facture(self, client_id: int, description: str, tjm: float,
-                    jours_effectifs: float, devis_id: Optional[int] = None,
+    def add_facture(self, client_id: int, description: str, tjm: float = 0,
+                    jours_effectifs: float = 0, devis_id: Optional[int] = None,
                     date_debut_mission: Optional[date] = None,
                     date_fin_mission: Optional[date] = None,
-                    delai_paiement: int = 30, notes: str = "") -> Facture:
-        """Crée une nouvelle facture."""
+                    delai_paiement: int = 30, notes: str = "",
+                    type_tarif: str = "tjm", montant_forfait: float = 0) -> Facture:
+        """
+        Crée une nouvelle facture.
+
+        Args:
+            type_tarif: 'tjm' pour TJM × jours, 'forfait' pour prix fixe
+            montant_forfait: Montant forfaitaire si type_tarif == 'forfait'
+        """
         numero = self.get_next_number('facture')
-        total_ht = tjm * jours_effectifs
+
+        if type_tarif == 'forfait':
+            total_ht = montant_forfait
+            # Pour forfait, tjm et jours sont à 0
+            tjm = 0
+            jours_effectifs = 0
+        else:
+            total_ht = tjm * jours_effectifs
+
         total_ttc = total_ht  # Micro-entreprise sans TVA
 
         # Calcul date d'échéance (30 jours fin de mois par défaut)
@@ -460,23 +508,31 @@ class Database:
         cursor.execute('''
             INSERT INTO factures (numero, devis_id, client_id, description, tjm,
                                  jours_effectifs, total_ht, total_ttc,
-                                 date_echeance, date_debut_mission, date_fin_mission, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                 date_echeance, date_debut_mission, date_fin_mission, notes, type_tarif)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (numero, devis_id, client_id, description, tjm, jours_effectifs,
               total_ht, total_ttc, date_echeance.isoformat(),
               date_debut_mission.isoformat() if date_debut_mission else None,
-              date_fin_mission.isoformat() if date_fin_mission else None, notes))
+              date_fin_mission.isoformat() if date_fin_mission else None, notes, type_tarif))
         self.conn.commit()
 
         return self.get_facture(cursor.lastrowid)
 
-    def add_facture_from_devis(self, devis_id: int, jours_effectifs: float,
+    def add_facture_from_devis(self, devis_id: int, jours_effectifs: float = 0,
                                date_debut_mission: Optional[date] = None,
-                               date_fin_mission: Optional[date] = None) -> Facture:
+                               date_fin_mission: Optional[date] = None,
+                               montant_forfait: float = 0) -> Facture:
         """Crée une facture à partir d'un devis."""
         devis = self.get_devis(devis_id)
         if not devis:
             raise ValueError(f"Devis {devis_id} introuvable")
+
+        # Utiliser le même type de tarif que le devis
+        type_tarif = devis.type_tarif
+        if type_tarif == 'forfait':
+            montant = montant_forfait if montant_forfait else devis.total_ht
+        else:
+            montant = 0
 
         return self.add_facture(
             client_id=devis.client_id,
@@ -485,7 +541,9 @@ class Database:
             jours_effectifs=jours_effectifs,
             devis_id=devis_id,
             date_debut_mission=date_debut_mission,
-            date_fin_mission=date_fin_mission
+            date_fin_mission=date_fin_mission,
+            type_tarif=type_tarif,
+            montant_forfait=montant
         )
 
     def get_facture(self, facture_id: int) -> Optional[Facture]:

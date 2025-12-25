@@ -24,7 +24,11 @@
                     <h6 class="mb-2"><i class="bi bi-file-earmark-text me-2"></i>Devis {{ devis.numero }}</h6>
                     <p class="mb-1"><strong>Client:</strong> {{ client.nom }}</p>
                     <p class="mb-1"><strong>Description:</strong> {{ devis.description }}</p>
+                    {% if devis.type_tarif == 'forfait' %}
+                    <p class="mb-0"><strong>Montant forfaitaire:</strong> <strong>{{ "{:,.0f}".format(devis.total_ht) }} € HT</strong></p>
+                    {% else %}
                     <p class="mb-0"><strong>Montant devis:</strong> {{ devis.jours }} jours × {{ "{:,.0f}".format(devis.tjm) }} € = <strong>{{ "{:,.0f}".format(devis.total_ht) }} € HT</strong></p>
+                    {% endif %}
                 </div>
 
                 <form method="POST" action="{{ url_for('devis_to_facture', devis_id=devis.id) }}">
@@ -42,6 +46,36 @@
                         </div>
                     </div>
 
+                    {% if devis.type_tarif == 'forfait' %}
+                    <!-- Mode Forfait -->
+                    <h5 class="mb-3"><i class="bi bi-tag me-2"></i>Montant à facturer</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="montant_forfait" class="form-label">Montant forfaitaire (€ HT) *</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="montant_forfait" name="montant_forfait"
+                                       value="{{ devis.total_ht }}" min="0" step="50" required>
+                                <span class="input-group-text">€ HT</span>
+                            </div>
+                            <div class="form-text">Montant du devis: {{ "{:,.0f}".format(devis.total_ht) }} €</div>
+                        </div>
+                    </div>
+
+                    <!-- Calcul en temps réel -->
+                    <div class="alert alert-success">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <strong>Total à facturer :</strong>
+                            </div>
+                            <div class="col-auto">
+                                <span class="fs-4 fw-bold" id="total-display">{{ "{:,.0f}".format(devis.total_ht) }} €</span> HT
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <!-- Mode TJM -->
                     <h5 class="mb-3"><i class="bi bi-calculator me-2"></i>Jours facturés</h5>
 
                     <div class="row g-3 mb-4">
@@ -68,6 +102,7 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
 
                     <hr>
 
@@ -102,6 +137,16 @@
 
 {% block extra_scripts %}
 <script>
+{% if devis.type_tarif == 'forfait' %}
+// Mode forfait
+function updateTotal() {
+    const montant = parseFloat(document.getElementById('montant_forfait').value) || 0;
+    document.getElementById('total-display').textContent = montant.toLocaleString('fr-FR') + ' €';
+}
+
+document.getElementById('montant_forfait').addEventListener('input', updateTotal);
+{% else %}
+// Mode TJM
 const tjm = {{ devis.tjm }};
 
 function updateTotal() {
@@ -111,5 +156,6 @@ function updateTotal() {
 }
 
 document.getElementById('jours_effectifs').addEventListener('input', updateTotal);
+{% endif %}
 </script>
 {% endblock %}

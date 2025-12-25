@@ -43,19 +43,53 @@
                         <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
                     </div>
 
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label for="tjm" class="form-label">TJM (€) *</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="tjm" name="tjm"
-                                       value="{{ defaults.get('tjm', 300) }}" min="0" step="10" required>
-                                <span class="input-group-text">€ / jour</span>
+                    <!-- Choix du type de tarification -->
+                    <div class="mb-4">
+                        <label class="form-label">Type de tarification *</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="type_tarif" id="type_tjm" value="tjm" checked>
+                            <label class="btn btn-outline-success" for="type_tjm">
+                                <i class="bi bi-calendar-day me-1"></i>TJM (Taux Journalier)
+                            </label>
+
+                            <input type="radio" class="btn-check" name="type_tarif" id="type_forfait" value="forfait">
+                            <label class="btn btn-outline-success" for="type_forfait">
+                                <i class="bi bi-tag me-1"></i>Prix Forfaitaire
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Champs TJM -->
+                    <div id="fields-tjm">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="tjm" class="form-label">TJM (€) *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="tjm" name="tjm"
+                                           value="{{ defaults.get('tjm', 300) }}" min="0" step="10">
+                                    <span class="input-group-text">€ / jour</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="jours_effectifs" class="form-label">Jours travaillés *</label>
+                                <input type="number" class="form-control" id="jours_effectifs" name="jours_effectifs"
+                                       value="5" min="0.5" step="0.5">
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="jours_effectifs" class="form-label">Jours travaillés *</label>
-                            <input type="number" class="form-control" id="jours_effectifs" name="jours_effectifs"
-                                   value="5" min="0.5" step="0.5" required>
+                    </div>
+
+                    <!-- Champs Forfait -->
+                    <div id="fields-forfait" style="display: none;">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <label for="montant_forfait" class="form-label">Montant forfaitaire (€ HT) *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="montant_forfait" name="montant_forfait"
+                                           value="1000" min="0" step="50">
+                                    <span class="input-group-text">€ HT</span>
+                                </div>
+                                <div class="form-text">Prix fixe pour l'ensemble de la prestation</div>
+                            </div>
                         </div>
                     </div>
 
@@ -111,21 +145,64 @@
                 </ul>
             </div>
         </div>
+
+        <div class="card bg-light mt-3">
+            <div class="card-body">
+                <h6><i class="bi bi-lightbulb me-2"></i>Conseil</h6>
+                <p class="small text-muted mb-0">
+                    <strong>TJM</strong> : facturez les jours réellement travaillés.<br>
+                    <strong>Forfait</strong> : facturez un montant global convenu.
+                </p>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+// Gestion du switch TJM / Forfait
+const typeTjm = document.getElementById('type_tjm');
+const typeForfait = document.getElementById('type_forfait');
+const fieldsTjm = document.getElementById('fields-tjm');
+const fieldsForfait = document.getElementById('fields-forfait');
+
+function togglePricingMode() {
+    if (typeForfait.checked) {
+        fieldsTjm.style.display = 'none';
+        fieldsForfait.style.display = 'block';
+        document.getElementById('tjm').removeAttribute('required');
+        document.getElementById('jours_effectifs').removeAttribute('required');
+        document.getElementById('montant_forfait').setAttribute('required', 'required');
+    } else {
+        fieldsTjm.style.display = 'block';
+        fieldsForfait.style.display = 'none';
+        document.getElementById('tjm').setAttribute('required', 'required');
+        document.getElementById('jours_effectifs').setAttribute('required', 'required');
+        document.getElementById('montant_forfait').removeAttribute('required');
+    }
+    updateTotal();
+}
+
+typeTjm.addEventListener('change', togglePricingMode);
+typeForfait.addEventListener('change', togglePricingMode);
+
+// Calcul du total en temps réel
 function updateTotal() {
-    const tjm = parseFloat(document.getElementById('tjm').value) || 0;
-    const jours = parseFloat(document.getElementById('jours_effectifs').value) || 0;
-    const total = tjm * jours;
+    let total = 0;
+    if (typeForfait.checked) {
+        total = parseFloat(document.getElementById('montant_forfait').value) || 0;
+    } else {
+        const tjm = parseFloat(document.getElementById('tjm').value) || 0;
+        const jours = parseFloat(document.getElementById('jours_effectifs').value) || 0;
+        total = tjm * jours;
+    }
     document.getElementById('total-display').textContent = total.toLocaleString('fr-FR') + ' €';
 }
 
 document.getElementById('tjm').addEventListener('input', updateTotal);
 document.getElementById('jours_effectifs').addEventListener('input', updateTotal);
+document.getElementById('montant_forfait').addEventListener('input', updateTotal);
 updateTotal();
 </script>
 {% endblock %}
