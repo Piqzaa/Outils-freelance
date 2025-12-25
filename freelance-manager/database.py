@@ -468,6 +468,13 @@ class Database:
         self.conn.commit()
         return cursor.rowcount > 0
 
+    def delete_devis(self, devis_id: int) -> bool:
+        """Supprime un devis par son ID."""
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM devis WHERE id = ?", (devis_id,))
+        self.conn.commit()
+        return cursor.rowcount > 0
+
     # ==================== GESTION DES FACTURES ====================
 
     def add_facture(self, client_id: int, description: str, tjm: float = 0,
@@ -603,6 +610,13 @@ class Database:
         self.conn.commit()
         return cursor.rowcount > 0
 
+    def delete_facture(self, facture_id: int) -> bool:
+        """Supprime une facture par son ID."""
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM factures WHERE id = ?", (facture_id,))
+        self.conn.commit()
+        return cursor.rowcount > 0
+
     # ==================== GESTION DES CONTRATS ====================
 
     def add_contrat(self, client_id: int, type_contrat: str, tjm: float = 0,
@@ -652,6 +666,13 @@ class Database:
         query += " ORDER BY date_creation DESC"
         cursor.execute(query, params)
         return [Contrat.from_row(tuple(row)) for row in cursor.fetchall()]
+
+    def delete_contrat(self, contrat_id: int) -> bool:
+        """Supprime un contrat par son ID."""
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM contrats WHERE id = ?", (contrat_id,))
+        self.conn.commit()
+        return cursor.rowcount > 0
 
     # ==================== STATISTIQUES ====================
 
