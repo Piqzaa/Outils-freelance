@@ -222,23 +222,36 @@ class DevisGenerator:
 
         elements.append(Paragraph("PRESTATIONS", self.styles['SectionTitle']))
 
-        # En-têtes du tableau
-        headers = ['Description', 'TJM (€)', 'Jours', 'Total HT (€)']
+        # Vérifier le type de tarification
+        type_tarif = getattr(devis, 'type_tarif', 'tjm') or 'tjm'
 
-        # Données
-        total_ht = devis.tjm * devis.jours
-        data = [
-            headers,
-            [
-                Paragraph(devis.description or "Prestation de service", self.styles['Info']),
-                f"{devis.tjm:,.2f}".replace(',', ' '),
-                f"{devis.jours:,.1f}".replace(',', ' '),
-                f"{total_ht:,.2f}".replace(',', ' ')
+        if type_tarif == 'forfait':
+            # Mode forfait - affichage simplifié
+            headers = ['Description', 'Montant HT (€)']
+            data = [
+                headers,
+                [
+                    Paragraph(devis.description or "Prestation de service", self.styles['Info']),
+                    f"{devis.total_ht:,.2f}".replace(',', ' ')
+                ]
             ]
-        ]
+            table = Table(data, colWidths=[14*cm, 3.5*cm])
+        else:
+            # Mode TJM - affichage détaillé
+            headers = ['Description', 'TJM (€)', 'Jours', 'Total HT (€)']
+            total_ht = devis.tjm * devis.jours
+            data = [
+                headers,
+                [
+                    Paragraph(devis.description or "Prestation de service", self.styles['Info']),
+                    f"{devis.tjm:,.2f}".replace(',', ' '),
+                    f"{devis.jours:,.1f}".replace(',', ' '),
+                    f"{total_ht:,.2f}".replace(',', ' ')
+                ]
+            ]
+            table = Table(data, colWidths=[9*cm, 3*cm, 2.5*cm, 3*cm])
 
         # Style du tableau
-        table = Table(data, colWidths=[9*cm, 3*cm, 2.5*cm, 3*cm])
         table.setStyle(TableStyle([
             # En-tête
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2C3E50')),
@@ -271,7 +284,8 @@ class DevisGenerator:
         """Construit la section des totaux."""
         elements = []
 
-        total_ht = devis.tjm * devis.jours
+        # Utiliser le total_ht stocké (qui gère TJM et forfait)
+        total_ht = devis.total_ht
 
         # Tableau des totaux (aligné à droite)
         if self.freelance.get('tva_applicable', False):

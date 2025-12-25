@@ -64,26 +64,34 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Prestation</th>
+                                {% if devis.type_tarif == 'forfait' %}
+                                <th class="text-end">Montant HT</th>
+                                {% else %}
                                 <th class="text-end">TJM</th>
                                 <th class="text-end">Jours</th>
                                 <th class="text-end">Total HT</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>{{ devis.description }}</td>
+                                {% if devis.type_tarif == 'forfait' %}
+                                <td class="text-end fw-bold">{{ "{:,.2f}".format(devis.total_ht).replace(",", " ") }} €</td>
+                                {% else %}
                                 <td class="text-end">{{ "{:,.2f}".format(devis.tjm).replace(",", " ") }} €</td>
                                 <td class="text-end">{{ devis.jours }}</td>
                                 <td class="text-end fw-bold">{{ "{:,.2f}".format(devis.total_ht).replace(",", " ") }} €</td>
+                                {% endif %}
                             </tr>
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
-                                <th colspan="3" class="text-end">Total HT</th>
+                                <th colspan="{% if devis.type_tarif == 'forfait' %}1{% else %}3{% endif %}" class="text-end">Total HT</th>
                                 <th class="text-end">{{ "{:,.2f}".format(devis.total_ht).replace(",", " ") }} €</th>
                             </tr>
                             <tr>
-                                <th colspan="3" class="text-end">Total TTC</th>
+                                <th colspan="{% if devis.type_tarif == 'forfait' %}1{% else %}3{% endif %}" class="text-end">Total TTC</th>
                                 <th class="text-end">{{ "{:,.2f}".format(devis.total_ttc).replace(",", " ") }} €</th>
                             </tr>
                         </tfoot>

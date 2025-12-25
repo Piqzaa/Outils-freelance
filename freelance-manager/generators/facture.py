@@ -264,23 +264,36 @@ class FactureGenerator:
 
         elements.append(Paragraph("DÉTAIL DES PRESTATIONS", self.styles['SectionTitle']))
 
-        # En-têtes du tableau
-        headers = ['Description', 'TJM (€)', 'Jours', 'Total HT (€)']
+        # Vérifier le type de tarification
+        type_tarif = getattr(facture, 'type_tarif', 'tjm') or 'tjm'
 
-        # Données
-        total_ht = facture.tjm * facture.jours_effectifs
-        data = [
-            headers,
-            [
-                Paragraph(facture.description or "Prestation de service", self.styles['Info']),
-                f"{facture.tjm:,.2f}".replace(',', ' '),
-                f"{facture.jours_effectifs:,.1f}".replace(',', ' '),
-                f"{total_ht:,.2f}".replace(',', ' ')
+        if type_tarif == 'forfait':
+            # Mode forfait - affichage simplifié
+            headers = ['Description', 'Montant HT (€)']
+            data = [
+                headers,
+                [
+                    Paragraph(facture.description or "Prestation de service", self.styles['Info']),
+                    f"{facture.total_ht:,.2f}".replace(',', ' ')
+                ]
             ]
-        ]
+            table = Table(data, colWidths=[14*cm, 3.5*cm])
+        else:
+            # Mode TJM - affichage détaillé
+            headers = ['Description', 'TJM (€)', 'Jours', 'Total HT (€)']
+            total_ht = facture.tjm * facture.jours_effectifs
+            data = [
+                headers,
+                [
+                    Paragraph(facture.description or "Prestation de service", self.styles['Info']),
+                    f"{facture.tjm:,.2f}".replace(',', ' '),
+                    f"{facture.jours_effectifs:,.1f}".replace(',', ' '),
+                    f"{total_ht:,.2f}".replace(',', ' ')
+                ]
+            ]
+            table = Table(data, colWidths=[9*cm, 3*cm, 2.5*cm, 3*cm])
 
         # Style du tableau
-        table = Table(data, colWidths=[9*cm, 3*cm, 2.5*cm, 3*cm])
         table.setStyle(TableStyle([
             # En-tête
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2C3E50')),
@@ -313,7 +326,8 @@ class FactureGenerator:
         """Construit la section des totaux."""
         elements = []
 
-        total_ht = facture.tjm * facture.jours_effectifs
+        # Utiliser le total_ht stocké (qui gère TJM et forfait)
+        total_ht = facture.total_ht
 
         # Tableau des totaux (aligné à droite)
         if self.freelance.get('tva_applicable', False):
