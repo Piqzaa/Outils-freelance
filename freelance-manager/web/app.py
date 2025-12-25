@@ -217,6 +217,7 @@ def devis_new():
         description = request.form.get('description', 'Prestation de service')
         validite = int(request.form.get('validite', 30))
         type_tarif = request.form.get('type_tarif', 'tjm')
+        acompte = 'acompte' in request.form  # Checkbox: présent = True, absent = False
 
         if type_tarif == 'forfait':
             montant_forfait = float(request.form.get('montant_forfait', 0))
@@ -235,7 +236,8 @@ def devis_new():
             jours=jours,
             validite_jours=validite,
             type_tarif=type_tarif,
-            montant_forfait=montant_forfait
+            montant_forfait=montant_forfait,
+            acompte=acompte
         )
 
         # Générer le PDF
