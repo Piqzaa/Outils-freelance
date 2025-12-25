@@ -37,7 +37,7 @@
                 </div>
                 <div class="mt-3">
                     <div class="progress" style="height: 8px;">
-                        <div class="progress-bar bg-primary" style="width: {{ pct_seuil|min(100) }}%"></div>
+                        <div class="progress-bar bg-primary" style="width: {% if pct_seuil > 100 %}100{% else %}{{ pct_seuil }}{% endif %}%"></div>
                     </div>
                     <small class="text-muted">{{ "{:.1f}".format(pct_seuil) }}% du seuil micro ({{ "{:,.0f}".format(seuil_ca).replace(",", " ") }} €)</small>
                 </div>

@@ -1,168 +1,265 @@
 # Freelance Manager
 
-Outil complet pour la gestion des devis, factures et contrats pour freelances en France.
-Disponible en **CLI** (ligne de commande) et **Interface Web**.
+Outil complet pour la gestion des **devis**, **factures** et **contrats** pour freelances en France.
 
-## Installation
+Disponible en :
+- **Interface Web** (recommandée) - Dashboard visuel avec graphiques
+- **CLI** (ligne de commande) - Pour automatisation et usage rapide
+
+---
+
+## Prérequis
+
+- **Python 3.10+** installé sur votre machine
+- **pip** (gestionnaire de paquets Python)
+
+### Vérifier votre version de Python
 
 ```bash
-cd freelance-manager
+python --version
+```
+
+Si Python n'est pas installé, téléchargez-le sur : https://www.python.org/downloads/
+
+---
+
+## Installation (étape par étape)
+
+### 1. Ouvrir un terminal
+
+- **Windows** : Ouvrir PowerShell ou CMD
+- **Mac** : Ouvrir Terminal
+- **Linux** : Ouvrir votre terminal
+
+### 2. Se placer dans le dossier du projet
+
+```bash
+cd chemin/vers/freelance-manager
+```
+
+Exemple Windows :
+```bash
+cd "C:\Users\VotreNom\Documents\freelance-manager"
+```
+
+### 3. Installer les dépendances Python
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Interface Web (recommandée)
+Cette commande installe automatiquement :
+- `Flask` - Serveur web
+- `ReportLab` - Génération de PDF
+- `python-docx` - Génération de documents Word
+- `PyYAML` - Lecture de la configuration
+- `Click` - Interface en ligne de commande
+- `tabulate` - Affichage de tableaux
+- `openpyxl` - Export Excel
 
-Lancez l'interface web :
+### 4. Configurer vos informations
+
+Ouvrez le fichier `config.yaml` et remplacez les valeurs par vos informations :
+
+```yaml
+freelance:
+  nom: "Votre Prénom NOM"
+  siret: "123 456 789 00012"
+  adresse: "123 Rue de Exemple"
+  code_postal: "75001"
+  ville: "Paris"
+  email: "votre@email.com"
+  telephone: "+33 6 12 34 56 78"
+  statut: "Micro-entrepreneur"
+  tva_applicable: false  # false pour micro-entreprise
+
+  # Coordonnées bancaires (pour les factures)
+  banque: "Nom de votre banque"
+  iban: "FR76 1234 5678 9012 3456 7890 123"
+  bic: "BNPAFRPP"
+```
+
+---
+
+## Lancer l'Interface Web
+
+### 1. Démarrer le serveur
 
 ```bash
 python web/app.py
 ```
 
-Puis ouvrez http://localhost:5000 dans votre navigateur.
+Vous devriez voir :
+```
+==================================================
+  Freelance Manager - Interface Web
+==================================================
 
-**Fonctionnalités web :**
-- Dashboard avec CA annuel et graphiques
-- Gestion complète des clients
-- Création de devis avec génération PDF automatique
-- Création de factures (depuis un devis ou directement)
-- Génération de contrats Word (régie, forfait, mission)
-- Configuration via interface
-- Alertes seuil micro-entreprise
+  Ouvrir: http://localhost:5000
 
-## CLI (ligne de commande)
-
-```bash
-python cli.py --help
+ * Running on http://0.0.0.0:5000
 ```
 
-Ou avec installation :
-```bash
-pip install -e .
-freelance --help
-```
+### 2. Ouvrir dans le navigateur
 
-## Configuration
+Allez sur : **http://localhost:5000**
 
-Éditez `config.yaml` avec vos informations :
+### 3. Arrêter le serveur
 
-```yaml
-freelance:
-  nom: "Votre Nom"
-  siret: "XXX XXX XXX XXXXX"
-  adresse: "Votre adresse"
-  email: "votre@email.com"
-  # ...
-```
+Appuyez sur `Ctrl + C` dans le terminal.
 
-## Commandes
+---
+
+## Utilisation de l'Interface Web
+
+### Dashboard
+- Vue d'ensemble de votre activité
+- CA annuel avec graphique mensuel
+- Alerte si vous approchez du seuil micro-entreprise (77 700 €)
+- Factures impayées et en retard
 
 ### Clients
+1. Cliquez sur **Clients** dans le menu
+2. Cliquez sur **Nouveau client**
+3. Remplissez le formulaire
+4. Cliquez sur **Créer le client**
+
+### Créer un Devis
+1. Cliquez sur **Devis** > **Nouveau devis**
+2. Sélectionnez le client
+3. Entrez la description, le TJM et le nombre de jours
+4. Cliquez sur **Créer le devis**
+5. Le PDF est généré automatiquement dans le dossier `output/`
+
+### Créer une Facture
+**Depuis un devis :**
+1. Allez sur le devis
+2. Cliquez sur **Convertir en facture**
+3. Entrez les jours effectivement travaillés
+4. Le PDF est généré automatiquement
+
+**Sans devis :**
+1. Cliquez sur **Factures** > **Nouvelle facture**
+2. Remplissez le formulaire
+3. Cliquez sur **Créer la facture**
+
+### Générer un Contrat
+1. Cliquez sur **Contrats** > **Nouveau contrat**
+2. Sélectionnez le client et le type :
+   - **Régie** : Facturation au temps passé
+   - **Forfait** : Prix fixe avec livrables
+   - **Mission** : Contrat court (1-5 jours)
+3. Le document Word est généré dans `output/`
+
+### Configuration
+1. Cliquez sur **Config** dans le menu
+2. Modifiez vos informations
+3. Cliquez sur **Enregistrer**
+
+---
+
+## Utilisation en Ligne de Commande (CLI)
+
+### Commandes principales
 
 ```bash
+# Aide générale
+python cli.py --help
+
 # Ajouter un client
-freelance client add "ACME Corp" --siret "123456789" --email "contact@acme.com" --ville "Paris"
+python cli.py client add "Nom Client" --siret "123456789" --email "client@email.com"
 
-# Lister les clients
-freelance client list
+# Créer un devis
+python cli.py devis create 1 --tjm 300 --jours 5 --description "Mission dev"
 
-# Voir un client
-freelance client show 1
+# Créer une facture depuis un devis
+python cli.py facture create --devis 1 --jours-effectifs 5
 
-# Modifier un client
-freelance client edit 1 --email "nouveau@email.com"
+# Générer un contrat
+python cli.py contrat generate 1 --type regie --tjm 300
 
-# Supprimer un client
-freelance client delete 1
+# Voir les statistiques
+python cli.py stats
+
+# Exporter en Excel
+python cli.py export excel --annee 2024
 ```
 
-### Devis
+---
 
-```bash
-# Créer un devis (génère automatiquement le PDF)
-freelance devis create 1 --tjm 300 --jours 5 --description "Développement API REST"
-
-# Lister les devis
-freelance devis list
-freelance devis list --statut accepté
-
-# Changer le statut
-freelance devis statut 1 accepté
-
-# Régénérer le PDF
-freelance devis pdf 1
-```
-
-### Factures
-
-```bash
-# Créer une facture à partir d'un devis
-freelance facture create --devis 1 --jours-effectifs 5 --date-debut 2024-01-15 --date-fin 2024-01-19
-
-# Créer une facture sans devis
-freelance facture create --client 1 --tjm 300 --jours-effectifs 3 --description "Support technique"
-
-# Lister les factures
-freelance facture list
-freelance facture list --statut impayée
-
-# Marquer comme payée
-freelance facture statut 1 payée --date-paiement 2024-02-15
-```
-
-### Contrats
-
-```bash
-# Contrat en régie (le plus courant)
-freelance contrat generate 1 --type regie --tjm 350 --duree-mois 6 --objet "Mission développement"
-
-# Contrat au forfait
-freelance contrat generate 1 --type forfait --tjm 300 --duree-jours 20 --montant 6000
-
-# Mission courte (1-5 jours)
-freelance contrat generate 1 --type mission --tjm 400 --duree-jours 2
-```
-
-### Statistiques
-
-```bash
-# Dashboard complet
-freelance stats
-
-# Stats pour une année spécifique
-freelance stats --annee 2023
-```
-
-### Exports
-
-```bash
-# Export CSV (pour compta)
-freelance export csv --type all
-
-# Export Excel avec récapitulatif
-freelance export excel --annee 2024
-```
-
-## Structure des documents générés
+## Structure des fichiers générés
 
 ```
 output/
-├── DEVIS-2024-001.pdf
+├── DEVIS-2024-001.pdf       # Devis numérotés
 ├── DEVIS-2024-002.pdf
-├── FACT-2024-001.pdf
+├── FACT-2024-001.pdf        # Factures numérotées
 ├── FACT-2024-002.pdf
-├── CONT-2024-001_regie.docx
-├── clients_20240115.csv
-└── comptabilite_2024.xlsx
+├── CONT-2024-001_regie.docx # Contrats Word
+├── comptabilite_2024.xlsx   # Export Excel
+└── clients_20241224.csv     # Export CSV
 ```
 
-## Mentions légales incluses
+---
 
-- TVA non applicable (art. 293 B du CGI) pour micro-entreprise
-- Pénalités de retard (taux légal + 40€ frais recouvrement)
-- Escompte pour paiement anticipé
-- Numérotation chronologique obligatoire
-- Toutes les mentions requises par la loi française
+## Conformité légale française
 
-## Seuil micro-entreprise
+Les documents générés incluent automatiquement :
 
-Le dashboard affiche une alerte quand vous approchez du seuil de CA (77 700 €).
+✅ **Numérotation chronologique** (obligatoire) : DEVIS-2024-001, FACT-2024-001
+
+✅ **Mentions TVA** : "TVA non applicable, art. 293 B du CGI" (micro-entreprise)
+
+✅ **Pénalités de retard** (obligatoire sur factures) : Taux légal + 40€ frais de recouvrement
+
+✅ **Escompte** (obligatoire) : "Pas d'escompte pour paiement anticipé"
+
+✅ **Coordonnées bancaires** sur les factures
+
+✅ **Conditions de paiement** : 30 jours fin de mois par défaut
+
+---
+
+## Dépannage
+
+### "ModuleNotFoundError: No module named 'flask'"
+
+Installez les dépendances :
+```bash
+pip install -r requirements.txt
+```
+
+### "python: command not found"
+
+Essayez avec `python3` :
+```bash
+python3 web/app.py
+```
+
+### Le serveur ne démarre pas
+
+Vérifiez qu'aucune autre application n'utilise le port 5000 :
+```bash
+# Windows
+netstat -ano | findstr :5000
+
+# Mac/Linux
+lsof -i :5000
+```
+
+### Les PDF ne se génèrent pas
+
+Vérifiez que le dossier `output/` existe :
+```bash
+mkdir output
+```
+
+---
+
+## Support
+
+En cas de problème, vérifiez :
+1. Python 3.10+ est installé
+2. Les dépendances sont installées (`pip install -r requirements.txt`)
+3. Le fichier `config.yaml` est correctement configuré
+4. Vous êtes dans le bon dossier (`freelance-manager/`)
