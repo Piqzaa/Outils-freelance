@@ -865,6 +865,59 @@ def config_cmd(edit, show):
         click.echo("  --show   Afficher le contenu")
 
 
+# ==================== COMMANDES MAINTENANCE ====================
+
+@cli.command('reset')
+@click.option('--compteurs', is_flag=True, help='Réinitialiser uniquement les compteurs')
+@click.option('--all', 'reset_all', is_flag=True, help='Supprimer TOUTES les données (clients, devis, factures, contrats)')
+@click.confirmation_option(prompt='⚠️  ATTENTION: Cette action est irréversible. Continuer?')
+def reset_data(compteurs, reset_all):
+    """
+    Réinitialise les données (usage: mode test uniquement).
+
+    ⚠️  ATTENTION: Ne pas utiliser en production!
+    Les numéros de devis/factures doivent rester séquentiels pour la conformité fiscale.
+    """
+    db = get_db()
+    cursor = db.conn.cursor()
+
+    if reset_all:
+        # Supprimer toutes les données
+        click.echo("Suppression de toutes les données...")
+        cursor.execute("DELETE FROM contrats")
+        cursor.execute("DELETE FROM factures")
+        cursor.execute("DELETE FROM devis")
+        cursor.execute("DELETE FROM clients")
+        cursor.execute("DELETE FROM compteurs")
+        db.conn.commit()
+        click.echo("✓ Toutes les données ont été supprimées")
+        click.echo("✓ Compteurs réinitialisés")
+
+        # Supprimer les fichiers générés
+        config = get_config()
+        output_dir = Path(config.get('paths', {}).get('output', 'output'))
+        if output_dir.exists():
+            import shutil
+            shutil.rmtree(output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            click.echo(f"✓ Dossier {output_dir} vidé")
+
+    elif compteurs:
+        # Réinitialiser uniquement les compteurs
+        cursor.execute("DELETE FROM compteurs")
+        db.conn.commit()
+        click.echo("✓ Compteurs réinitialisés")
+        click.echo("  Prochains numéros: DEV-XXXX-001, FAC-XXXX-001, CTR-XXXX-001")
+
+    else:
+        click.echo("Utilisez --compteurs ou --all pour spécifier quoi réinitialiser.")
+        click.echo("\nOptions:")
+        click.echo("  --compteurs   Réinitialiser les compteurs de numérotation")
+        click.echo("  --all         Supprimer TOUTES les données")
+
+    db.close()
+
+
 # ==================== POINT D'ENTRÉE ====================
 
 def main():
