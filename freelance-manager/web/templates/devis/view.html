@@ -152,6 +152,21 @@
                 </div>
             </div>
         </div>
+
+        <div class="card mt-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-trash me-2"></i>Zone dangereuse</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Cette action est irréversible.</p>
+                <form method="POST" action="{{ url_for('devis_delete', devis_id=devis.id) }}"
+                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce devis ?');">
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-trash me-2"></i>Supprimer ce devis
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

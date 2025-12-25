@@ -378,6 +378,33 @@ def devis_to_facture(devis_id):
     return render_template('devis/to_facture.html', devis=devis, client=client)
 
 
+@app.route('/devis/<int:devis_id>/delete', methods=['POST'])
+def devis_delete(devis_id):
+    """Supprimer un devis."""
+    db = get_db()
+    config = get_config()
+
+    devis = db.get_devis(devis_id)
+    if not devis:
+        flash('Devis introuvable', 'error')
+        db.close()
+        return redirect(url_for('devis_list'))
+
+    numero = devis.numero
+
+    # Supprimer le fichier PDF s'il existe
+    pdf_path = Path(config['paths']['output']) / f"{numero}.pdf"
+    if pdf_path.exists():
+        pdf_path.unlink()
+
+    # Supprimer de la base de données
+    db.delete_devis(devis_id)
+    db.close()
+
+    flash(f'Devis {numero} supprimé avec succès', 'success')
+    return redirect(url_for('devis_list'))
+
+
 # ==================== ROUTES FACTURES ====================
 
 @app.route('/factures')
@@ -531,6 +558,33 @@ def facture_pdf(facture_id):
     return send_file(pdf_path, as_attachment=True)
 
 
+@app.route('/factures/<int:facture_id>/delete', methods=['POST'])
+def facture_delete(facture_id):
+    """Supprimer une facture."""
+    db = get_db()
+    config = get_config()
+
+    facture = db.get_facture(facture_id)
+    if not facture:
+        flash('Facture introuvable', 'error')
+        db.close()
+        return redirect(url_for('factures_list'))
+
+    numero = facture.numero
+
+    # Supprimer le fichier PDF s'il existe
+    pdf_path = Path(config['paths']['output']) / f"{numero}.pdf"
+    if pdf_path.exists():
+        pdf_path.unlink()
+
+    # Supprimer de la base de données
+    db.delete_facture(facture_id)
+    db.close()
+
+    flash(f'Facture {numero} supprimée avec succès', 'success')
+    return redirect(url_for('factures_list'))
+
+
 # ==================== ROUTES CONTRATS ====================
 
 @app.route('/contrats')
@@ -659,6 +713,33 @@ def contrat_download(contrat_id):
     else:
         flash('Document introuvable, veuillez le régénérer', 'error')
         return redirect(url_for('contrat_view', contrat_id=contrat_id))
+
+
+@app.route('/contrats/<int:contrat_id>/delete', methods=['POST'])
+def contrat_delete(contrat_id):
+    """Supprimer un contrat."""
+    db = get_db()
+
+    contrat = db.get_contrat(contrat_id)
+    if not contrat:
+        flash('Contrat introuvable', 'error')
+        db.close()
+        return redirect(url_for('contrats_list'))
+
+    numero = contrat.numero
+
+    # Supprimer le fichier Word s'il existe
+    type_suffix = {'regie': '_regie', 'forfait': '_forfait', 'mission': '_mission'}
+    doc_path = OUTPUT_DIR / f"{numero}{type_suffix.get(contrat.type_contrat, '')}.docx"
+    if doc_path.exists():
+        doc_path.unlink()
+
+    # Supprimer de la base de données
+    db.delete_contrat(contrat_id)
+    db.close()
+
+    flash(f'Contrat {numero} supprimé avec succès', 'success')
+    return redirect(url_for('contrats_list'))
 
 
 # ==================== ROUTES CONFIGURATION ====================
