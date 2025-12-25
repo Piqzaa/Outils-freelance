@@ -39,10 +39,14 @@
                     <div class="col-md-6">
                         <h6 class="text-muted">Client</h6>
                         <p class="mb-0">
+                            {% if client %}
                             <a href="{{ url_for('client_view', client_id=client.id) }}">
                                 <strong>{{ client.nom }}</strong>
                             </a>
                             {% if client.siret %}<br><small class="text-muted">SIRET: {{ client.siret }}</small>{% endif %}
+                            {% else %}
+                            <span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Client supprimé (ID: {{ devis.client_id }})</span>
+                            {% endif %}
                         </p>
                     </div>
                     <div class="col-md-6">
