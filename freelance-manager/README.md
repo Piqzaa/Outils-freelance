@@ -220,6 +220,23 @@ Les documents générés incluent automatiquement :
 
 ---
 
+## Réinitialisation (Mode Test)
+
+Si vous avez fait des tests et souhaitez remettre les compteurs à zéro :
+
+```bash
+# Réinitialiser uniquement les compteurs (garde les données)
+python cli.py reset --compteurs
+
+# OU supprimer TOUTES les données (clients, devis, factures, contrats)
+python cli.py reset --all
+```
+
+⚠️ **ATTENTION** : En production, ne jamais réinitialiser les compteurs !
+Les numéros de devis/factures doivent rester séquentiels pour la conformité fiscale.
+
+---
+
 ## Dépannage
 
 ### "ModuleNotFoundError: No module named 'flask'"
