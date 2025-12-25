@@ -39,7 +39,12 @@
                     </td>
                     <td>{{ d.client_nom }}</td>
                     <td>{{ d.description[:30] }}{% if d.description|length > 30 %}...{% endif %}</td>
-                    <td class="text-end fw-bold">{{ "{:,.0f}".format(d.total_ht).replace(",", " ") }} €</td>
+                    <td class="text-end fw-bold">
+                        {{ "{:,.0f}".format(d.total_ht).replace(",", " ") }} €
+                        {% if d.type_tarif == 'forfait' %}
+                        <span class="badge bg-info ms-1" title="Prix forfaitaire">F</span>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if d.statut == 'accepté' %}
                         <span class="badge bg-success">{{ d.statut }}</span>
