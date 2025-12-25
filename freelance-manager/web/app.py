@@ -41,8 +41,15 @@ def get_db():
 
 
 def get_config():
-    """Charge la configuration."""
-    return load_config(str(CONFIG_PATH))
+    """Charge la configuration avec chemins absolus."""
+    config = load_config(str(CONFIG_PATH))
+    # Forcer le chemin absolu pour output
+    if 'paths' not in config:
+        config['paths'] = {}
+    config['paths']['output'] = str(OUTPUT_DIR)
+    # Créer le dossier si nécessaire
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    return config
 
 
 # ==================== ROUTES PRINCIPALES ====================
