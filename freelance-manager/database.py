@@ -56,6 +56,7 @@ class Devis:
     date_envoi: Optional[date] = None
     notes: str = ""
     type_tarif: str = "tjm"  # 'tjm' (TJM × jours) ou 'forfait' (prix fixe)
+    acompte: bool = True  # Demander un acompte de 30% (False pour missions régie)
 
     @classmethod
     def from_row(cls, row: tuple) -> 'Devis':
@@ -73,7 +74,8 @@ class Devis:
             date_creation=date.fromisoformat(row[10]) if row[10] else None,
             date_envoi=date.fromisoformat(row[11]) if row[11] else None,
             notes=row[12] if len(row) > 12 else "",
-            type_tarif=row[13] if len(row) > 13 and row[13] else "tjm"
+            type_tarif=row[13] if len(row) > 13 and row[13] else "tjm",
+            acompte=bool(row[14]) if len(row) > 14 and row[14] is not None else True
         )
 
 
@@ -206,15 +208,20 @@ class Database:
                 date_envoi DATE,
                 notes TEXT,
                 type_tarif TEXT DEFAULT 'tjm',
+                acompte INTEGER DEFAULT 1,
                 FOREIGN KEY (client_id) REFERENCES clients(id)
             )
         ''')
 
-        # Migration: ajouter colonne type_tarif si elle n'existe pas
+        # Migration: ajouter colonnes si elles n'existent pas
         try:
             cursor.execute("ALTER TABLE devis ADD COLUMN type_tarif TEXT DEFAULT 'tjm'")
         except sqlite3.OperationalError:
-            pass  # La colonne existe déjà
+            pass
+        try:
+            cursor.execute("ALTER TABLE devis ADD COLUMN acompte INTEGER DEFAULT 1")
+        except sqlite3.OperationalError:
+            pass
 
         # Table factures
         cursor.execute('''
@@ -391,13 +398,15 @@ class Database:
 
     def add_devis(self, client_id: int, description: str, tjm: float = 0,
                   jours: float = 0, validite_jours: int = 30, notes: str = "",
-                  type_tarif: str = "tjm", montant_forfait: float = 0) -> Devis:
+                  type_tarif: str = "tjm", montant_forfait: float = 0,
+                  acompte: bool = True) -> Devis:
         """
         Crée un nouveau devis.
 
         Args:
             type_tarif: 'tjm' pour TJM × jours, 'forfait' pour prix fixe
             montant_forfait: Montant forfaitaire si type_tarif == 'forfait'
+            acompte: True pour demander 30% d'acompte, False sinon (ex: mission régie)
         """
         numero = self.get_next_number('devis')
 
@@ -414,10 +423,10 @@ class Database:
         cursor = self.conn.cursor()
         cursor.execute('''
             INSERT INTO devis (numero, client_id, description, tjm, jours,
-                              total_ht, total_ttc, validite_jours, notes, type_tarif)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                              total_ht, total_ttc, validite_jours, notes, type_tarif, acompte)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (numero, client_id, description, tjm, jours, total_ht, total_ttc,
-              validite_jours, notes, type_tarif))
+              validite_jours, notes, type_tarif, 1 if acompte else 0))
         self.conn.commit()
 
         return self.get_devis(cursor.lastrowid)

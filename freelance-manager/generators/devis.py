@@ -299,11 +299,14 @@ class DevisGenerator:
             spaceBefore=4, spaceAfter=4
         ))
 
-        # Conditions
+        # Conditions (avec ou sans acompte)
+        acompte = getattr(devis, 'acompte', True)
+        acompte_text = "<b>Acompte :</b> 30% à la commande |" if acompte else ""
+
         conditions_text = f"""
         <b>Validité :</b> {devis.validite_jours} jours |
         <b>Paiement :</b> {self.mentions.get('conditions_paiement', 'Virement à 30 jours')} |
-        <b>Acompte :</b> 30% à la commande<br/>
+        {acompte_text}
         <b>Acceptation :</b> Retourner signé avec mention "Bon pour accord" et date.
         """
         elements.append(Paragraph(conditions_text.strip(), self.styles['InfoSmall']))
